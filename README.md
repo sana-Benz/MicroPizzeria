@@ -1,7 +1,7 @@
 # 🍕 MicroPizza – Microservices Pizza Ordering App
 
 ## 📌 Description
-KubePizza est une application de commande de pizzas basée sur une architecture **microservices**.
+MicroPizza est une application de commande de pizzas basée sur une architecture **microservices**.
 
 L’utilisateur peut :
 - consulter le menu des pizzas
