@@ -1,4 +1,3 @@
-```markdown
 # 🍕 KubePizza – Microservices Pizza Ordering App
 
 ## 📌 Description
