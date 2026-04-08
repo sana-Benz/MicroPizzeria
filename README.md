@@ -1,7 +1,7 @@
-# 🍕 MicroPizza – Microservices Pizza Ordering App
+# 🍕 MicroPizzeria – Microservices Pizza Ordering App
 
 ## 📌 Description
-MicroPizza est une application de commande de pizzas basée sur une architecture **microservices**.
+La MicroPizzeria est une application de commande de pizzas basée sur une architecture **microservices**.
 
 L’utilisateur peut :
 - consulter le menu des pizzas
