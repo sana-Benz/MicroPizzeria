@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="fr">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title>La Micro Pizzeria</title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="style.css">
+        <link rel="stylesheet" href="https://pro.fontawesome.com/releases/v5.10.0/css/all.css">
+    </head>
+    <body>
+        
+        <nav id="nav" class="nav"> 
+            <h1> La <span >Micro</span> Pizzeria</h1>
+            <ul>
+                <li id="label" onclick="mobile()"><i class="fas fa-bars"></i></li>
+                <li>Accueil</li>
+                <a href="#recipies"><li>Recettes</li></a>
+                <a href="#newsletter"><li>Contact</li></a>
+                <li>Menu</li>
+                <button>S'inscrire</button>
+            </ul>
+        </nav>
+
+        <header> 
+            <div class="left">
+                <h1>Le goût de l’Italie dans chaque bouchée</h1>
+                <p class="description">
+                    Découvrez le goût authentique de l’Italie au cœur de votre ville. 
+                    Nos pizzas sont préparées par des chefs italiens passionnés, avec une pâte faite maison et des ingrédients frais sélectionnés avec soin.
+                </p>
+                <button>Commencer</button>
+            </div>
+
+            <div class="right">
+                <img src="images/header.png" alt="header photo">
+            </div>
+        </header>
+
+        <section class="presentation">
+            <div class="left">
+                <img src="images/making_pizza.jpg" alt="making a pizza">
+            </div>
+            <div class="right">
+                <p class="mini-title">A propos de nous</p>
+                <h1> Que faisons nous de spécial dans notre restaurant ?</h1>
+                <p class="description">
+                Dans notre pizzeria, chaque pizza raconte une histoire. 
+                Nos chefs italiens préparent la pâte chaque jour à la main, en respectant les traditions artisanales. 
+                Nous utilisons uniquement des ingrédients frais, importés directement d’Italie, et cuisons nos pizzas au four pour un goût unique et inoubliable.
+                </p>
+            </div>
+        </section>
+
+        <section id="recipies">
+            <p class="mini-title">Nos recettes</p>
+            <h2>Quelles sont nos pizzas les plus populaires ?</h2>
+            <div class="cards">
+                <div class="card">
+                    <img src="images/peperoni.png" alt="recette">
+                    <h3>Pizza Peperoni</h3>
+                    <div class="rating-stars">
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star-half-alt"></i>
+                    </div>
+                    <p class="price">20€</p>
+                </div>
+                <div class="card">
+                    <img src="images/chicken.png" alt="recette">
+                    <h3>Pizza au poulet</h3>
+                    <div class="rating-stars">
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star-half-alt"></i>
+                    </div>
+                    <p class="price">25€</p>
+                </div>
+                <div class="card">
+                    <img src="images/beef.png" alt="recette">
+                    <h3>Pizza à la viande</h3>
+                    <div class="rating-stars">
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star-half-alt"></i>
+                    </div>
+                    <p class="price">33€</p>
+                </div>
+                <div class="card">
+                    <img src="images/vegetarian.png" alt="recette">
+                    <h3>Pizza Végétarienne</h3>
+                    <div class="rating-stars">
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star-half-alt"></i>
+                    </div>
+                    <p class="price">35€</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="newsletter">
+            <h1> Inscrivez-vous à notre newsletter</h1>
+            <form>
+                <input type="text" />
+                <button>S'abonner</button>
+            </form>
+        </section>
+
+        <footer>
+            <div class="column important">
+                <h3>Merci à vous !</h3>
+                <p>&copy; Copyright La Micro Pizzeria, 2026 | Tous droits réservés</p>
+            </div>
+            <div class="column">
+                <h3>Nos services</h3>
+                <p>Boutiques</p>
+                <p>Restaurant</p>
+                <p>Livraison</p>
+            </div>
+            <div class="column">
+                <h3>Recrutement</h3>
+                <p>recrutement@LaMicroPizzeria.fr</p>
+                <p>Postuler pour un emploi</p>
+                <p>Job étudiant</p>
+            </div>
+            <div class="column">
+                <h3>Nos Locaux</h3>
+                <p>Paris</p>
+                <p>Marseille</p>
+                <p>Toulouse</p>
+            </div>
+        </footer>
+
+        <script>
+            function mobile(){
+                var x = document.getElementById('nav');
+                if (x.className === "nav"){
+                    x.className += ' responsive';
+                }else{
+                    x.className = 'nav';
+                }
+            }
+        </script>
+
+    </body>
+</html>
