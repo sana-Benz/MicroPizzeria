@@ -52,7 +52,8 @@ def login():
 # VALIDATE
 @main.route("/auth/validate", methods=["GET"])
 def validate():
-    """Verify a JWT : this endpoint is called by order-service to authenticate users before processing orders."""
+    """Verify a JWT : this endpoint is called by order-service to authenticate users before processing orders.
+    Requires authentication."""
     auth_header = request.headers.get("Authorization")
 
     if not auth_header:
@@ -76,7 +77,7 @@ def validate():
 
 @main.route("/users/me", methods=["GET"])
 def get_me():
-    """Get current user profile"""
+    """Get current user profile. Requires authentication."""
     auth_header = request.headers.get("Authorization")
 
     if not auth_header:
@@ -100,7 +101,7 @@ def get_me():
 
 @main.route("/users/me", methods=["PUT"])
 def update_me():
-    """Update profile"""
+    """Updates a profile. Requires authentication."""
     auth_header = request.headers.get("Authorization")
 
     if not auth_header:

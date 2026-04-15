@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   name: user-service
 spec:
-  replicas: 1
+  replicas: 3
   selector:
     matchLabels:
       app: user-service
@@ -14,6 +14,6 @@ spec:
     spec:
       containers:
         - name: user-service
-          image: user-service:latest
+          image: sanabns/user-service:latest
           ports:
             - containerPort: 5001
