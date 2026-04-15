@@ -5,6 +5,235 @@
     --grey: rgb(124, 124, 124);
 }
 
+/* Page commande */
+.order-header {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 15px 0;
+    background-color: black;
+}
+
+.order-header h1 {
+    font-size: 1.7em;
+}
+
+.order-header h1 span {
+    color: var(--orange);
+}
+
+.order-page {
+    margin: 20px 0 60px;
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+}
+
+.order-section {
+    border: 1px solid rgba(255, 172, 12, 0.55);
+    border-radius: 12px;
+    padding: 24px;
+}
+
+.order-section h2 {
+    margin: 0 0 20px;
+    font-size: 2em;
+}
+
+.order-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 18px;
+}
+
+.order-card {
+    background-color: #131313;
+    border: 1px solid #1f1f1f;
+    border-radius: 10px;
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+}
+
+.order-card img {
+    width: 100%;
+    height: 160px;
+    object-fit: cover;
+    border-radius: 8px;
+    margin-bottom: 10px;
+}
+
+.order-card h3 {
+    margin: 0 0 8px;
+}
+
+.order-card .price {
+    margin: 8px 0 12px;
+    color: var(--orange);
+    font-weight: 700;
+}
+
+.quantity-row {
+    margin-top: auto;
+    display: flex;
+    gap: 8px;
+}
+
+.quantity-row input {
+    width: 78px;
+    padding: 8px;
+    border: 1px solid #333;
+    background-color: #0e0e0e;
+    color: white;
+    border-radius: 6px;
+}
+
+.quantity-row button,
+.order-submit button {
+    padding: 10px 14px;
+    background-color: inherit;
+    color: var(--orange);
+    border: 1px solid var(--orange);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.35s;
+}
+
+.quantity-row button:hover,
+.order-submit button:hover {
+    background-color: var(--orange);
+    color: white;
+}
+
+.order-submit {
+    display: flex;
+    justify-content: center;
+}
+
+.order-submit button {
+    font-size: 1rem;
+    padding: 12px 26px;
+}
+
+.page-tools {
+    margin: 14px 0 4px;
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.page-tools button {
+    padding: 8px 12px;
+    background-color: inherit;
+    color: var(--orange);
+    border: 1px solid var(--orange);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.35s;
+}
+
+.page-tools button:hover {
+    background-color: var(--orange);
+    color: white;
+}
+
+.item-status {
+    min-height: 18px;
+    margin: 10px 0 0;
+    font-size: 0.9rem;
+    color: var(--orange);
+}
+
+.summary-page {
+    margin: 20px 0 60px;
+    display: flex;
+    justify-content: center;
+}
+
+.summary-card {
+    width: min(900px, 100%);
+    border: 1px solid rgba(255, 172, 12, 0.55);
+    border-radius: 12px;
+    padding: 24px;
+    background-color: #0f0f0f;
+}
+
+.summary-card h2 {
+    margin-top: 0;
+}
+
+.summary-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+}
+
+.summary-table th,
+.summary-table td {
+    border-bottom: 1px solid #2c2c2c;
+    padding: 10px;
+    text-align: left;
+}
+
+.summary-table th {
+    color: var(--orange);
+}
+
+.summary-total {
+    margin-top: 16px;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--orange);
+}
+
+.summary-actions {
+    margin-top: 20px;
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.summary-actions button,
+.delivery-form button {
+    padding: 10px 14px;
+    background-color: inherit;
+    color: var(--orange);
+    border: 1px solid var(--orange);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.35s;
+}
+
+.summary-actions button:hover,
+.delivery-form button:hover {
+    background-color: var(--orange);
+    color: white;
+}
+
+.delivery-form {
+    margin-top: 20px;
+    display: grid;
+    gap: 12px;
+}
+
+.delivery-form label {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    color: #f4f4f4;
+}
+
+.delivery-form input {
+    padding: 10px;
+    border: 1px solid #333;
+    border-radius: 6px;
+    background-color: #111;
+    color: #fff;
+}
+
 html {
     scroll-behavior: smooth;
 }
@@ -353,5 +582,39 @@ footer .important {
    }
    #newsletter form{
     width: 100%;
+   }
+
+   .order-header h1 {
+    font-size: 1.3em;
+   }
+
+   .order-section {
+    padding: 18px;
+   }
+
+   .order-section h2 {
+    font-size: 1.5em;
+   }
+
+   .quantity-row {
+    flex-direction: column;
+   }
+
+   .quantity-row input,
+   .quantity-row button {
+    width: 100%;
+   }
+
+   .summary-table {
+    display: block;
+    overflow-x: auto;
+   }
+
+   .summary-actions {
+    flex-direction: column;
+   }
+
+   .page-tools {
+    flex-direction: column;
    }
 }

@@ -18,8 +18,9 @@
                 <li>Accueil</li>
                 <a href="#recipies"><li>Recettes</li></a>
                 <a href="#newsletter"><li>Contact</li></a>
-                <li>Menu</li>
-                <button>S'inscrire</button>
+                <a href="commande.html"><li>Menu</li></a>
+                <button type="button" id="track-order-btn">Suivi commande</button>
+                <a href="livraison.html"><button>S'inscrire</button></a>
             </ul>
         </nav>
 
@@ -30,7 +31,7 @@
                     Découvrez le goût authentique de l’Italie au cœur de votre ville. 
                     Nos pizzas sont préparées par des chefs italiens passionnés, avec une pâte faite maison et des ingrédients frais sélectionnés avec soin.
                 </p>
-                <button>Commencer</button>
+                <a href="livraison.html"><button>Commencer</button></a>
             </div>
 
             <div class="right">
@@ -142,6 +143,19 @@
         </footer>
 
         <script>
+            const ORDER_STATUS_KEY = "microPizzeriaOrderStatus";
+            const ORDER_CONFIRMED_AT_KEY = "microPizzeriaOrderConfirmedAt";
+
+            function getOrderStatus() {
+                const status = localStorage.getItem(ORDER_STATUS_KEY);
+                const confirmedAt = Number(localStorage.getItem(ORDER_CONFIRMED_AT_KEY) || 0);
+                if (status === "en_cours" && confirmedAt > 0 && Date.now() - confirmedAt > 60000) {
+                    localStorage.setItem(ORDER_STATUS_KEY, "livree");
+                    return "livree";
+                }
+                return status || "en_cours";
+            }
+
             function mobile(){
                 var x = document.getElementById('nav');
                 if (x.className === "nav"){
@@ -150,6 +164,11 @@
                     x.className = 'nav';
                 }
             }
+
+            document.getElementById("track-order-btn").addEventListener("click", function () {
+                const status = getOrderStatus();
+                alert(status === "livree" ? "Commande livree." : "Commande en cours.");
+            });
         </script>
 
     </body>

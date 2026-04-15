@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="fr">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title>Commande validee | La Micro Pizzeria</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="style.css">
+    </head>
+    <body>
+        <header class="order-header">
+            <h1>La <span>Micro</span> Pizzeria</h1>
+        </header>
+
+        <main class="summary-page">
+            <section class="summary-card">
+                <p class="mini-title">Merci</p>
+                <h2>Votre commande a bien ete enregistree</h2>
+                <p class="description">Vous pouvez revenir a l'accueil ou suivre l'etat de votre commande.</p>
+                <div class="summary-actions">
+                    <button type="button" id="go-home-btn">Retour a l'accueil</button>
+                    <button type="button" id="track-order-btn">Suivre ma commande</button>
+                </div>
+                <p id="order-status-message" class="item-status" aria-live="polite"></p>
+            </section>
+        </main>
+
+        <script>
+            const CART_KEY = "microPizzeriaCart";
+            const ORDER_STATUS_KEY = "microPizzeriaOrderStatus";
+            const ORDER_CONFIRMED_AT_KEY = "microPizzeriaOrderConfirmedAt";
+
+            function getOrderStatus() {
+                const status = localStorage.getItem(ORDER_STATUS_KEY);
+                const confirmedAt = Number(localStorage.getItem(ORDER_CONFIRMED_AT_KEY) || 0);
+                if (status === "en_cours" && confirmedAt > 0 && Date.now() - confirmedAt > 60000) {
+                    localStorage.setItem(ORDER_STATUS_KEY, "livree");
+                    return "livree";
+                }
+                return status || "en_cours";
+            }
+
+            localStorage.removeItem(CART_KEY);
+
+            document.getElementById("go-home-btn").addEventListener("click", function () {
+                window.location.href = "index.html";
+            });
+
+            document.getElementById("track-order-btn").addEventListener("click", function () {
+                const status = getOrderStatus();
+                const text = status === "livree" ? "Commande livree." : "Commande en cours.";
+                document.getElementById("order-status-message").textContent = text;
+            });
+        </script>
+    </body>
+</html>
