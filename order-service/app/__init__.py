@@ -13,4 +13,9 @@ def create_app():
     from .routes import main
     app.register_blueprint(main)
 
+    with app.app_context():
+        db.create_all()
+        from .seed import seed_menu
+        seed_menu(db)
+
     return app

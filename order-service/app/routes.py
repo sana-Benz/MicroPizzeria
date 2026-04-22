@@ -5,6 +5,11 @@ from .auth_client import validate_token
 
 main = Blueprint("main", __name__)
 
+@main.route("/health", methods=["GET"])
+def health():
+    """Helps k8s know if the pod is still alive"""
+    return jsonify({"status": "ok"}), 200
+
 @main.route("/menu", methods=["GET"])
 def get_menu():
     """Returns all the menu"""

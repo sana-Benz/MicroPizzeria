@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   name: order-service
 spec:
-  replicas: 3
+  replicas: 1
   selector:
     matchLabels:
       app: order-service
@@ -12,8 +12,42 @@ spec:
       labels:
         app: order-service
     spec:
+      initContainers:
+        - name: wait-for-mysql # waits till mysql is ready before starting the Flask container
+          image: busybox:1.35
+          command: ['sh', '-c', 'until nc -z mysql-order 3306; do echo "waiting for MySQL..."; sleep 3; done']
       containers:
         - name: order-service
           image: sanabns/order-service:latest
+          imagePullPolicy: Always
           ports:
             - containerPort: 5002
+          env: # environment variables
+            - name: DB_PASSWORD #pulls the password from the secret
+              valueFrom:
+                secretKeyRef:
+                  name: order-service-secret
+                  key: mysql-password
+            - name: SQLALCHEMY_DATABASE_URI 
+              value: "mysql+pymysql://micropizza:$(DB_PASSWORD)@mysql-order:3306/orders_db"
+            - name: USER_SERVICE_URL # base url for /auth/validate
+              value: "http://user-service:5001"
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "250m"
+              memory: "256Mi"
+          readinessProbe: # checked before sending traffic
+            httpGet:
+              path: /health
+              port: 5002
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe: # checked periodically via /health
+            httpGet:
+              path: /health
+              port: 5002
+            initialDelaySeconds: 15
+            periodSeconds: 20
