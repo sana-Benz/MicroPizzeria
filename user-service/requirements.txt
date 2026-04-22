@@ -4,3 +4,5 @@ Flask-Migrate
 PyJWT
 bcrypt
 python-dotenv
+PyMySQL
+cryptography

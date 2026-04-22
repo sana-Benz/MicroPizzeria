@@ -2,8 +2,9 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: user-service
+  namespace: default
 spec:
-  replicas: 3
+  replicas: 1
   selector:
     matchLabels:
       app: user-service
@@ -12,8 +13,45 @@ spec:
       labels:
         app: user-service
     spec:
+      initContainers:
+        - name: wait-for-mysql
+          image: busybox:1.35
+          command: ['sh', '-c', 'until nc -z mysql-user 3306; do echo "waiting for MySQL..."; sleep 3; done']
       containers:
         - name: user-service
           image: sanabns/user-service:latest
+          imagePullPolicy: Always
           ports:
             - containerPort: 5001
+          env: # pulls secrets from secret.yaml
+            - name: SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: user-service-secret
+                  key: secret-key
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: user-service-secret
+                  key: mysql-password
+            - name: SQLALCHEMY_DATABASE_URI
+              value: "mysql+pymysql://micropizza:$(DB_PASSWORD)@mysql-user:3306/users_db"
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "250m"
+              memory: "256Mi"
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 5001
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 5001
+            initialDelaySeconds: 15
+            periodSeconds: 20

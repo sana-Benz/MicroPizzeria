@@ -1,4 +1,3 @@
-# Flask app factory
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from .config import Config
@@ -13,5 +12,8 @@ def create_app():
 
     from .routes import main
     app.register_blueprint(main)
+
+    with app.app_context():
+        db.create_all() # creates user table
 
     return app

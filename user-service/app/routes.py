@@ -6,6 +6,11 @@ from .auth import hash_password, check_password, generate_token, verify_token
 
 main = Blueprint("main", __name__)
 
+@main.route("/health", methods=["GET"])
+def health():
+    """Helps k8s know if the pod is still alive"""
+    return jsonify({"status": "ok"}), 200
+
 # REGISTER
 @main.route("/auth/register", methods=["POST"])
 def register():
