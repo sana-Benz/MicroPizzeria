@@ -20,7 +20,7 @@
                 <a href="#newsletter"><li>Contact</li></a>
                 <a href="commande.html"><li>Menu</li></a>
                 <button type="button" id="track-order-btn">Suivi commande</button>
-                <a href="livraison.html"><button>S'inscrire</button></a>
+                <a href="auth.html"><button>S'inscrire</button></a>
             </ul>
         </nav>
 
@@ -31,7 +31,7 @@
                     Découvrez le goût authentique de l’Italie au cœur de votre ville. 
                     Nos pizzas sont préparées par des chefs italiens passionnés, avec une pâte faite maison et des ingrédients frais sélectionnés avec soin.
                 </p>
-                <a href="livraison.html"><button>Commencer</button></a>
+                <a href="auth.html"><button>Commencer</button></a>
             </div>
 
             <div class="right">
@@ -59,8 +59,8 @@
             <h2>Quelles sont nos pizzas les plus populaires ?</h2>
             <div class="cards">
                 <div class="card">
-                    <img src="images/peperoni.png" alt="recette">
-                    <h3>Pizza Peperoni</h3>
+                    <img src="images/menu_items/pizza_peperoni.jpeg" alt="Pizza Pepperoni">
+                    <h3>Pepperoni</h3>
                     <div class="rating-stars">
                         <i class="fas fa-star"></i>
                         <i class="fas fa-star"></i>
@@ -68,11 +68,11 @@
                         <i class="fas fa-star"></i>
                         <i class="fas fa-star-half-alt"></i>
                     </div>
-                    <p class="price">20€</p>
+                    <p class="price">14€</p>
                 </div>
                 <div class="card">
-                    <img src="images/chicken.png" alt="recette">
-                    <h3>Pizza au poulet</h3>
+                    <img src="images/menu_items/pizza_chicken.jpg" alt="Pizza Poulet">
+                    <h3>Poulet</h3>
                     <div class="rating-stars">
                         <i class="fas fa-star"></i>
                         <i class="fas fa-star"></i>
@@ -80,11 +80,11 @@
                         <i class="fas fa-star"></i>
                         <i class="fas fa-star-half-alt"></i>
                     </div>
-                    <p class="price">25€</p>
+                    <p class="price">14.50€</p>
                 </div>
                 <div class="card">
-                    <img src="images/beef.png" alt="recette">
-                    <h3>Pizza à la viande</h3>
+                    <img src="images/menu_items/pizza_beef.jpg" alt="Pizza Bœuf">
+                    <h3>Bœuf</h3>
                     <div class="rating-stars">
                         <i class="fas fa-star"></i>
                         <i class="fas fa-star"></i>
@@ -92,11 +92,11 @@
                         <i class="fas fa-star"></i>
                         <i class="fas fa-star-half-alt"></i>
                     </div>
-                    <p class="price">33€</p>
+                    <p class="price">15€</p>
                 </div>
                 <div class="card">
-                    <img src="images/vegetarian.png" alt="recette">
-                    <h3>Pizza Végétarienne</h3>
+                    <img src="images/menu_items/pizza_vegetarian.jpg" alt="Pizza Végétarienne">
+                    <h3>Végétarienne</h3>
                     <div class="rating-stars">
                         <i class="fas fa-star"></i>
                         <i class="fas fa-star"></i>
@@ -104,7 +104,7 @@
                         <i class="fas fa-star"></i>
                         <i class="fas fa-star-half-alt"></i>
                     </div>
-                    <p class="price">35€</p>
+                    <p class="price">13€</p>
                 </div>
             </div>
         </section>
@@ -166,6 +166,10 @@
             }
 
             document.getElementById("track-order-btn").addEventListener("click", function () {
+                if (!localStorage.getItem('microPizzeriaToken')) {
+                    window.location.href = 'auth.html';
+                    return;
+                }
                 const status = getOrderStatus();
                 alert(status === "livree" ? "Commande livree." : "Commande en cours.");
             });

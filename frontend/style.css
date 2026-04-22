@@ -425,8 +425,10 @@ header .right img{
 }
 
 #recipies .cards .card img{
-    width :200px;
-    height: 160 px;
+    width: 200px;
+    height: 160px;
+    object-fit: cover;
+    border-radius: 8px;
 }
 
 

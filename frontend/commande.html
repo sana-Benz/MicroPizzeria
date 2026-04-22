@@ -21,126 +21,24 @@
             <section class="order-section">
                 <p class="mini-title">Nos specialites</p>
                 <h2>Nos Pizzas</h2>
-                <div class="order-grid">
-                    <article class="order-card" data-name="Pizza Margherita" data-price="12">
-                        <img src="https://images.unsplash.com/photo-1574071318508-1cdbab80d002?auto=format&fit=crop&w=900&q=80" alt="Pizza Margherita">
-                        <h3>Pizza Margherita</h3>
-                        <p class="description">Sauce tomate, mozzarella fior di latte, basilic frais, huile d'olive.</p>
-                        <p class="price">12EUR</p>
-                        <div class="quantity-row">
-                            <input type="number" min="0" value="0" aria-label="Quantite Pizza Margherita">
-                            <button type="button" class="validate-item-btn">Valider la quantite</button>
-                        </div>
-                        <p class="item-status" aria-live="polite"></p>
-                    </article>
-
-                    <article class="order-card" data-name="Pizza Pepperoni" data-price="14">
-                        <img src="https://images.unsplash.com/photo-1600628422019-7f5f5d92ce3d?auto=format&fit=crop&w=900&q=80" alt="Pizza Pepperoni">
-                        <h3>Pizza Pepperoni</h3>
-                        <p class="description">Sauce tomate, mozzarella, pepperoni, olives noires, origan.</p>
-                        <p class="price">14EUR</p>
-                        <div class="quantity-row">
-                            <input type="number" min="0" value="0" aria-label="Quantite Pizza Pepperoni">
-                            <button type="button" class="validate-item-btn">Valider la quantite</button>
-                        </div>
-                        <p class="item-status" aria-live="polite"></p>
-                    </article>
-
-                    <article class="order-card" data-name="Pizza 4 Fromages" data-price="15">
-                        <img src="https://images.unsplash.com/photo-1548365328-9f547fb0953f?auto=format&fit=crop&w=900&q=80" alt="Pizza 4 fromages">
-                        <h3>Pizza 4 Fromages</h3>
-                        <p class="description">Mozzarella, gorgonzola, parmesan, emmental, creme legere.</p>
-                        <p class="price">15EUR</p>
-                        <div class="quantity-row">
-                            <input type="number" min="0" value="0" aria-label="Quantite Pizza 4 Fromages">
-                            <button type="button" class="validate-item-btn">Valider la quantite</button>
-                        </div>
-                        <p class="item-status" aria-live="polite"></p>
-                    </article>
+                <div class="order-grid" id="pizza-grid">
+                    <p class="loading">Chargement...</p>
                 </div>
             </section>
 
             <section class="order-section">
                 <p class="mini-title">Pour accompagner</p>
                 <h2>Nos boissons</h2>
-                <div class="order-grid">
-                    <article class="order-card" data-name="Limonade Maison" data-price="4">
-                        <img src="https://images.unsplash.com/photo-1581006852262-e4307cf6283a?auto=format&fit=crop&w=900&q=80" alt="Limonade maison">
-                        <h3>Limonade Maison</h3>
-                        <p class="description">Citron frais, eau petillante, menthe, sirop de canne.</p>
-                        <p class="price">4EUR</p>
-                        <div class="quantity-row">
-                            <input type="number" min="0" value="0" aria-label="Quantite Limonade Maison">
-                            <button type="button" class="validate-item-btn">Valider la quantite</button>
-                        </div>
-                        <p class="item-status" aria-live="polite"></p>
-                    </article>
-
-                    <article class="order-card" data-name="Ice Tea Peche" data-price="5">
-                        <img src="https://images.unsplash.com/photo-1544145945-f90425340c7e?auto=format&fit=crop&w=900&q=80" alt="Ice tea peche">
-                        <h3>Ice Tea Peche</h3>
-                        <p class="description">The noir infuse, peche blanche, glace pilée, tranche d'orange.</p>
-                        <p class="price">5EUR</p>
-                        <div class="quantity-row">
-                            <input type="number" min="0" value="0" aria-label="Quantite Ice Tea Peche">
-                            <button type="button" class="validate-item-btn">Valider la quantite</button>
-                        </div>
-                        <p class="item-status" aria-live="polite"></p>
-                    </article>
-
-                    <article class="order-card" data-name="Soda Cola" data-price="3">
-                        <img src="https://images.unsplash.com/photo-1517093911940-08cb5b3952e7?auto=format&fit=crop&w=900&q=80" alt="Soda cola">
-                        <h3>Soda Cola</h3>
-                        <p class="description">Canette 33cl, servie bien fraiche avec des glacons.</p>
-                        <p class="price">3EUR</p>
-                        <div class="quantity-row">
-                            <input type="number" min="0" value="0" aria-label="Quantite Soda Cola">
-                            <button type="button" class="validate-item-btn">Valider la quantite</button>
-                        </div>
-                        <p class="item-status" aria-live="polite"></p>
-                    </article>
+                <div class="order-grid" id="drink-grid">
+                    <p class="loading">Chargement...</p>
                 </div>
             </section>
 
             <section class="order-section">
                 <p class="mini-title">La touche sucree</p>
                 <h2>Nos desserts</h2>
-                <div class="order-grid">
-                    <article class="order-card" data-name="Tiramisu" data-price="6">
-                        <img src="https://images.unsplash.com/photo-1565958011703-44f9829ba187?auto=format&fit=crop&w=900&q=80" alt="Tiramisu">
-                        <h3>Tiramisu</h3>
-                        <p class="description">Mascarpone, cafe, biscuits cuillere, cacao amer.</p>
-                        <p class="price">6EUR</p>
-                        <div class="quantity-row">
-                            <input type="number" min="0" value="0" aria-label="Quantite Tiramisu">
-                            <button type="button" class="validate-item-btn">Valider la quantite</button>
-                        </div>
-                        <p class="item-status" aria-live="polite"></p>
-                    </article>
-
-                    <article class="order-card" data-name="Panna Cotta" data-price="5">
-                        <img src="https://images.unsplash.com/photo-1519864600265-abb23847ef2c?auto=format&fit=crop&w=900&q=80" alt="Panna cotta">
-                        <h3>Panna Cotta</h3>
-                        <p class="description">Creme vanille, coulis de fruits rouges, amandes grillees.</p>
-                        <p class="price">5EUR</p>
-                        <div class="quantity-row">
-                            <input type="number" min="0" value="0" aria-label="Quantite Panna Cotta">
-                            <button type="button" class="validate-item-btn">Valider la quantite</button>
-                        </div>
-                        <p class="item-status" aria-live="polite"></p>
-                    </article>
-
-                    <article class="order-card" data-name="Fondant Chocolat" data-price="7">
-                        <img src="https://images.unsplash.com/photo-1586985289688-ca3cf47d3e6e?auto=format&fit=crop&w=900&q=80" alt="Fondant chocolat">
-                        <h3>Fondant Chocolat</h3>
-                        <p class="description">Chocolat noir 70%, coeur coulant, boule de glace vanille.</p>
-                        <p class="price">7EUR</p>
-                        <div class="quantity-row">
-                            <input type="number" min="0" value="0" aria-label="Quantite Fondant Chocolat">
-                            <button type="button" class="validate-item-btn">Valider la quantite</button>
-                        </div>
-                        <p class="item-status" aria-live="polite"></p>
-                    </article>
+                <div class="order-grid" id="dessert-grid">
+                    <p class="loading">Chargement...</p>
                 </div>
             </section>
 
@@ -150,10 +48,31 @@
         </main>
 
         <script>
+            const API_BASE = '';
             const CART_KEY = "microPizzeriaCart";
             const CUSTOMER_KEY = "microPizzeriaCustomer";
             const ORDER_STATUS_KEY = "microPizzeriaOrderStatus";
             const ORDER_CONFIRMED_AT_KEY = "microPizzeriaOrderConfirmedAt";
+
+            const IMAGE_MAP = {
+                'Margherita':              'images/menu_items/pizza_margharita.jpeg',
+                'Pepperoni':               'images/menu_items/pizza_peperoni.jpeg',
+                'Végétarienne':            'images/menu_items/pizza_vegetarian.jpg',
+                'Fruits de mer':           'images/menu_items/pizza_seafood.jpg',
+                'Bœuf':                    'images/menu_items/pizza_beef.jpg',
+                'Poulet':                  'images/menu_items/pizza_chicken.jpg',
+                'Neptune':                 'images/menu_items/pizza_neptune.png',
+                'Eau minérale':            'images/menu_items/drinks_water.webp',
+                'Cola':                    'images/menu_items/drinks_cola.webp',
+                'Sprite':                  'images/menu_items/drinks_sprite.jpeg',
+                'Ice Tea':                 'images/menu_items/drinks_icetea.png',
+                'Eau gazeuse':             'images/menu_items/drinks_sparklingwater.webp',
+                'Tiramisu':                'images/menu_items/dessert_tiramisu.jpg',
+                'Cheesecake':              'images/menu_items/desserts_cheesecake.jpg',
+                'Cannoli':                 'images/menu_items/dessert_cannoli.jpg',
+                'Panna Cotta':             'images/menu_items/dessert_pannacotta.webp',
+                'Crostata à la confiture': 'images/menu_items/dessert_crostata.jpg',
+            };
 
             function getCart() {
                 return JSON.parse(localStorage.getItem(CART_KEY) || "[]");
@@ -177,12 +96,11 @@
                 return status || "en_cours";
             }
 
-            function upsertItem(name, unitPrice, quantity) {
+            function upsertItem(id, name, unitPrice, quantity) {
                 const cart = getCart().filter((item) => item.quantity > 0);
                 const index = cart.findIndex((item) => item.name === name);
-
                 if (quantity > 0) {
-                    const nextItem = { name: name, unitPrice: unitPrice, quantity: quantity };
+                    const nextItem = { id, name, unitPrice, quantity };
                     if (index >= 0) {
                         cart[index] = nextItem;
                     } else {
@@ -191,81 +109,110 @@
                 } else if (index >= 0) {
                     cart.splice(index, 1);
                 }
-
                 saveCart(cart);
             }
 
-            function initializeFromCart() {
+            function createCard(item) {
                 const cart = getCart();
-                document.querySelectorAll(".order-card").forEach((card) => {
-                    const name = card.dataset.name;
-                    const input = card.querySelector("input[type='number']");
-                    const status = card.querySelector(".item-status");
-                    const existing = cart.find((item) => item.name === name);
+                const existing = cart.find((c) => c.name === item.name);
+                const currentQty = existing ? existing.quantity : 0;
 
-                    if (existing) {
-                        input.value = existing.quantity;
-                        status.textContent = "Quantite deja enregistree";
-                    }
-                });
-            }
+                const article = document.createElement('article');
+                article.className = 'order-card';
+                article.dataset.id = item.id;
+                article.dataset.name = item.name;
+                article.dataset.price = item.price;
 
-            document.querySelectorAll(".validate-item-btn").forEach((button) => {
-                button.addEventListener("click", function () {
-                    const card = this.closest(".order-card");
-                    const name = card.dataset.name;
-                    const unitPrice = Number(card.dataset.price);
-                    const input = card.querySelector("input[type='number']");
-                    const status = card.querySelector(".item-status");
+                const imgSrc = IMAGE_MAP[item.name] || 'images/menu_items/pizza_margharita.jpeg';
+
+                article.innerHTML = `
+                    <img src="${imgSrc}" alt="${item.name}">
+                    <h3>${item.name}</h3>
+                    <p class="description">${item.description}</p>
+                    <p class="price">${item.price}€</p>
+                    <div class="quantity-row">
+                        <input type="number" min="0" value="${currentQty}" aria-label="Quantite ${item.name}">
+                        <button type="button" class="validate-item-btn">Valider la quantite</button>
+                    </div>
+                    <p class="item-status" aria-live="polite">${currentQty > 0 ? 'Quantite deja enregistree' : ''}</p>
+                `;
+
+                article.querySelector('.validate-item-btn').addEventListener('click', function () {
+                    const input = article.querySelector('input[type="number"]');
+                    const status = article.querySelector('.item-status');
                     const quantity = Math.max(0, Number(input.value) || 0);
                     input.value = quantity;
-
-                    upsertItem(name, unitPrice, quantity);
-                    status.textContent = quantity > 0 ? "Quantite validee" : "Produit retire de la commande";
+                    upsertItem(item.id, item.name, item.price, quantity);
+                    status.textContent = quantity > 0 ? 'Quantite validee' : 'Produit retire de la commande';
                 });
-            });
 
-            document.getElementById("go-to-summary-btn").addEventListener("click", function () {
-                document.querySelectorAll(".order-card").forEach((card) => {
+                return article;
+            }
+
+            async function loadMenu() {
+                try {
+                    const response = await fetch(`${API_BASE}/api/menu`);
+                    if (!response.ok) throw new Error();
+                    const items = await response.json();
+
+                    const grids = {
+                        pizza:   document.getElementById('pizza-grid'),
+                        drink:   document.getElementById('drink-grid'),
+                        dessert: document.getElementById('dessert-grid'),
+                    };
+
+                    Object.values(grids).forEach((g) => (g.innerHTML = ''));
+
+                    items.forEach((item) => {
+                        const grid = grids[item.category];
+                        if (grid) grid.appendChild(createCard(item));
+                    });
+                } catch {
+                    document.querySelector('.order-page').innerHTML =
+                        '<p style="color:red;text-align:center;padding:2rem;">Impossible de charger le menu. Veuillez reessayer.</p>';
+                }
+            }
+
+            document.getElementById('go-to-summary-btn').addEventListener('click', function () {
+                document.querySelectorAll('.order-card').forEach((card) => {
+                    const id = Number(card.dataset.id);
                     const name = card.dataset.name;
                     const unitPrice = Number(card.dataset.price);
-                    const input = card.querySelector("input[type='number']");
+                    const input = card.querySelector('input[type="number"]');
                     const quantity = Math.max(0, Number(input.value) || 0);
-                    upsertItem(name, unitPrice, quantity);
+                    upsertItem(id, name, unitPrice, quantity);
                 });
 
                 const cart = getCart();
                 if (!cart.length) {
-                    alert("Selectionnez au moins un produit avant de valider.");
+                    alert('Selectionnez au moins un produit avant de valider.');
                     return;
                 }
-
-                window.location.href = "recapitulatif.html";
+                window.location.href = 'recapitulatif.html';
             });
 
-            document.getElementById("back-btn").addEventListener("click", function () {
+            document.getElementById('back-btn').addEventListener('click', function () {
                 if (window.history.length > 1) {
                     window.history.back();
                 } else {
-                    window.location.href = "livraison.html";
+                    window.location.href = 'livraison.html';
                 }
             });
 
-            document.getElementById("home-btn").addEventListener("click", function () {
-                window.location.href = "index.html";
+            document.getElementById('home-btn').addEventListener('click', function () {
+                window.location.href = 'index.html';
             });
 
-            document.getElementById("track-order-btn").addEventListener("click", function () {
+            document.getElementById('track-order-btn').addEventListener('click', function () {
                 const status = getOrderStatus();
-                alert(status === "livree" ? "Commande livree." : "Commande en cours.");
+                alert(status === 'livree' ? 'Commande livree.' : 'Commande en cours.');
             });
 
-            if (!hasCustomerInfo()) {
-                alert("Veuillez renseigner vos informations avant de commander.");
-                window.location.href = "livraison.html";
+            if (!localStorage.getItem('microPizzeriaToken')) {
+                window.location.href = 'auth.html';
+            } else {
+                loadMenu();
             }
-
-            initializeFromCart();
         </script>
     </body>
 </html>
