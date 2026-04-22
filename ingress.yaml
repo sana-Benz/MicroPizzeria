@@ -1,0 +1,32 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: micropizza-gateway
+  namespace: default
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+    nginx.ingress.kubernetes.io/use-regex: "true"
+spec:
+  ingressClassName: nginx
+  rules:
+    - http:
+        paths:
+          # /api/users/me  → user-service sees /users/me
+          # /api/auth/login → user-service sees /auth/login
+          - path: /api(/)((?:users|auth).*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: user-service
+                port:
+                  number: 5001
+
+          # /api/orders/123 → order-service sees /orders/123
+          # /api/menu       → order-service sees /menu
+          - path: /api(/)((?:orders|menu).*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: order-service
+                port:
+                  number: 5002
