@@ -50,7 +50,6 @@
         <script>
             const API_BASE = '';
             const CART_KEY = "microPizzeriaCart";
-            const CUSTOMER_KEY = "microPizzeriaCustomer";
             const ORDER_STATUS_KEY = "microPizzeriaOrderStatus";
             const ORDER_CONFIRMED_AT_KEY = "microPizzeriaOrderConfirmedAt";
 
@@ -80,10 +79,6 @@
 
             function saveCart(cart) {
                 localStorage.setItem(CART_KEY, JSON.stringify(cart));
-            }
-
-            function hasCustomerInfo() {
-                return Boolean(localStorage.getItem(CUSTOMER_KEY));
             }
 
             function getOrderStatus() {
@@ -195,7 +190,7 @@
                 if (window.history.length > 1) {
                     window.history.back();
                 } else {
-                    window.location.href = 'livraison.html';
+                    window.location.href = 'index.html';
                 }
             });
 

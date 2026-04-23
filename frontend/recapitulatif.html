@@ -14,114 +14,168 @@
         <div class="page-tools">
             <button type="button" id="back-btn">Retour page precedente</button>
             <button type="button" id="home-btn">Retour accueil</button>
-            <button type="button" id="track-order-btn">Suivi de commande</button>
         </div>
 
         <main class="summary-page">
             <section class="summary-card">
                 <p class="mini-title">Votre panier</p>
                 <h2>Recapitulatif de la commande</h2>
+
+                <div id="delivery-info" style="margin-bottom:20px; padding:14px; border:1px solid rgba(255,172,12,0.35); border-radius:8px; background:#111;">
+                    <p style="margin:0 0 6px; color:var(--orange); font-weight:600;">Adresse de livraison</p>
+                    <p id="delivery-name" style="margin:0 0 4px; font-size:0.95rem;"></p>
+                    <p id="delivery-address" style="margin:0; font-size:0.95rem; color:rgb(200,200,200);"></p>
+                </div>
+
                 <div id="summary-content"></div>
+
+                <p id="confirm-error" style="color:#ff4d4d; font-size:0.9rem; min-height:18px; margin:10px 0 0;"></p>
+
                 <div class="summary-actions">
                     <button type="button" id="edit-order-btn">Modifier la commande</button>
-                    <button type="button" id="confirm-order-btn">Commander</button>
+                    <button type="button" id="confirm-order-btn">Finaliser la commande</button>
                 </div>
             </section>
         </main>
 
         <script>
-            const CART_KEY = "microPizzeriaCart";
-            const CUSTOMER_KEY = "microPizzeriaCustomer";
-            const ORDER_STATUS_KEY = "microPizzeriaOrderStatus";
-            const ORDER_CONFIRMED_AT_KEY = "microPizzeriaOrderConfirmedAt";
+            const API_BASE  = '';
+            const TOKEN_KEY = 'microPizzeriaToken';
+            const CART_KEY  = 'microPizzeriaCart';
+            const ORDER_STATUS_KEY       = 'microPizzeriaOrderStatus';
+            const ORDER_CONFIRMED_AT_KEY = 'microPizzeriaOrderConfirmedAt';
+
+            if (!localStorage.getItem(TOKEN_KEY)) {
+                window.location.href = 'auth.html';
+            }
 
             function getCart() {
-                return JSON.parse(localStorage.getItem(CART_KEY) || "[]");
+                return JSON.parse(localStorage.getItem(CART_KEY) || '[]').filter((i) => i.quantity > 0);
             }
 
             function formatPrice(value) {
-                return value.toFixed(2) + " EUR";
+                return Number(value).toFixed(2) + ' €';
             }
 
-            function getOrderStatus() {
-                const status = localStorage.getItem(ORDER_STATUS_KEY);
-                const confirmedAt = Number(localStorage.getItem(ORDER_CONFIRMED_AT_KEY) || 0);
-                if (status === "en_cours" && confirmedAt > 0 && Date.now() - confirmedAt > 60000) {
-                    localStorage.setItem(ORDER_STATUS_KEY, "livree");
-                    return "livree";
+            // ── Load user profile ───────────────────────────────────────
+            let userProfile = null;
+
+            async function loadProfile() {
+                const res = await fetch(`${API_BASE}/api/users/me`, {
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem(TOKEN_KEY)}` }
+                });
+                if (!res.ok) {
+                    window.location.href = 'auth.html';
+                    return;
                 }
-                return status || "en_cours";
+                userProfile = await res.json();
+                document.getElementById('delivery-name').textContent    = userProfile.name  || '';
+                document.getElementById('delivery-address').textContent = userProfile.address || 'Aucune adresse enregistree';
             }
 
+            // ── Render cart table ───────────────────────────────────────
             function renderSummary() {
-                const summaryContainer = document.getElementById("summary-content");
-                const cart = getCart().filter((item) => item.quantity > 0);
+                const container = document.getElementById('summary-content');
+                const cart = getCart();
 
                 if (!cart.length) {
-                    summaryContainer.innerHTML = "<p class='description'>Aucun produit selectionne. Retournez sur la page commande.</p>";
+                    container.innerHTML = "<p class='description'>Aucun produit selectionne. Retournez sur la page commande.</p>";
+                    document.getElementById('confirm-order-btn').disabled = true;
                     return;
                 }
 
-                let rows = "";
+                let rows = '';
                 let total = 0;
 
                 cart.forEach((item) => {
                     const lineTotal = item.unitPrice * item.quantity;
                     total += lineTotal;
                     rows +=
-                        "<tr>" +
-                        "<td>" + item.name + "</td>" +
-                        "<td>" + item.quantity + "</td>" +
-                        "<td>" + formatPrice(item.unitPrice) + "</td>" +
-                        "<td>" + formatPrice(lineTotal) + "</td>" +
-                        "</tr>";
+                        '<tr>' +
+                        '<td>' + item.name + '</td>' +
+                        '<td>' + item.quantity + '</td>' +
+                        '<td>' + formatPrice(item.unitPrice) + '</td>' +
+                        '<td>' + formatPrice(lineTotal) + '</td>' +
+                        '</tr>';
                 });
 
-                summaryContainer.innerHTML =
+                container.innerHTML =
                     "<table class='summary-table'>" +
-                    "<thead><tr><th>Produit</th><th>Quantite</th><th>Prix unite</th><th>Sous-total</th></tr></thead>" +
-                    "<tbody>" + rows + "</tbody>" +
-                    "</table>" +
-                    "<p class='summary-total'>Montant total: " + formatPrice(total) + "</p>";
+                    '<thead><tr><th>Produit</th><th>Quantite</th><th>Prix unite</th><th>Sous-total</th></tr></thead>' +
+                    '<tbody>' + rows + '</tbody>' +
+                    '</table>' +
+                    "<p class='summary-total'>Montant total : " + formatPrice(total) + '</p>';
             }
 
-            document.getElementById("edit-order-btn").addEventListener("click", function () {
-                window.location.href = "commande.html";
-            });
+            // ── Finaliser ───────────────────────────────────────────────
+            document.getElementById('confirm-order-btn').addEventListener('click', async function () {
+                const errorEl = document.getElementById('confirm-error');
+                errorEl.textContent = '';
 
-            document.getElementById("confirm-order-btn").addEventListener("click", function () {
-                const cart = getCart().filter((item) => item.quantity > 0);
+                const cart = getCart();
                 if (!cart.length) {
-                    alert("Votre panier est vide.");
-                    window.location.href = "commande.html";
+                    errorEl.textContent = 'Votre panier est vide.';
                     return;
                 }
-                localStorage.setItem(ORDER_STATUS_KEY, "en_cours");
-                localStorage.setItem(ORDER_CONFIRMED_AT_KEY, String(Date.now()));
-                window.location.href = "commande-terminee.html";
-            });
 
-            document.getElementById("back-btn").addEventListener("click", function () {
-                if (window.history.length > 1) {
-                    window.history.back();
-                } else {
-                    window.location.href = "commande.html";
+                const deliveryAddress = userProfile && userProfile.address;
+                if (!deliveryAddress) {
+                    errorEl.textContent = "Aucune adresse de livraison. Mettez votre profil a jour depuis la page commande.";
+                    return;
+                }
+
+                const btn = this;
+                btn.disabled = true;
+                btn.textContent = 'Envoi en cours...';
+
+                try {
+                    const res = await fetch(`${API_BASE}/api/orders`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${localStorage.getItem(TOKEN_KEY)}`
+                        },
+                        body: JSON.stringify({
+                            delivery_address: deliveryAddress,
+                            items: cart.map((i) => ({
+                                menu_item_id: i.id,
+                                quantity: i.quantity
+                            }))
+                        })
+                    });
+
+                    if (!res.ok) {
+                        const data = await res.json().catch(() => ({}));
+                        throw new Error(data.error || 'Erreur lors de la creation de la commande.');
+                    }
+
+                    const order = await res.json();
+                    localStorage.removeItem(CART_KEY);
+                    localStorage.setItem(ORDER_STATUS_KEY, 'en_cours');
+                    localStorage.setItem(ORDER_CONFIRMED_AT_KEY, String(Date.now()));
+                    localStorage.setItem('microPizzeriaLastOrderId', String(order.order_id));
+                    window.location.href = 'commande-terminee.html';
+                } catch (err) {
+                    errorEl.textContent = err.message;
+                    btn.disabled = false;
+                    btn.textContent = 'Finaliser la commande';
                 }
             });
 
-            document.getElementById("home-btn").addEventListener("click", function () {
-                window.location.href = "index.html";
+            document.getElementById('edit-order-btn').addEventListener('click', function () {
+                window.location.href = 'commande.html';
             });
 
-            document.getElementById("track-order-btn").addEventListener("click", function () {
-                const status = getOrderStatus();
-                alert(status === "livree" ? "Commande livree." : "Commande en cours.");
+            document.getElementById('back-btn').addEventListener('click', function () {
+                window.history.length > 1 ? window.history.back() : window.location.href = 'commande.html';
             });
 
-            if (!localStorage.getItem(CUSTOMER_KEY)) {
-                window.location.href = "livraison.html";
-            }
+            document.getElementById('home-btn').addEventListener('click', function () {
+                window.location.href = 'index.html';
+            });
 
+            // ── Boot ────────────────────────────────────────────────────
+            loadProfile();
             renderSummary();
         </script>
     </body>
