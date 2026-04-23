@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="fr">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title>Historique | La Micro Pizzeria</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="style.css">
+    </head>
+    <body>
+        <header class="order-header">
+            <h1>La <span>Micro</span> Pizzeria</h1>
+        </header>
+
+        <div class="page-tools">
+            <button type="button" id="back-btn">Retour page precedente</button>
+            <button type="button" id="home-btn">Retour accueil</button>
+        </div>
+
+        <main style="margin: 20px 0 60px;">
+            <p class="mini-title">Mon compte</p>
+            <h2 style="margin: 0 0 24px; font-size: 2em;">Historique de mes commandes</h2>
+
+            <div id="orders-list">
+                <p class="description" style="text-align:center; padding:40px 0;">Chargement...</p>
+            </div>
+        </main>
+
+        <script>
+            const API_BASE  = '';
+            const TOKEN_KEY = 'microPizzeriaToken';
+
+            if (!localStorage.getItem(TOKEN_KEY)) {
+                window.location.href = 'auth.html';
+            }
+
+            const STATUS_LABELS = {
+                pending:   { text: 'En attente',     color: '#FFAC0C' },
+                preparing: { text: 'En preparation', color: '#4da6ff' },
+                delivered: { text: 'Livree',          color: '#4caf50' },
+                cancelled: { text: 'Annulee',         color: '#ff4d4d' },
+            };
+
+            async function loadOrders() {
+                const listEl = document.getElementById('orders-list');
+
+                try {
+                    const token = localStorage.getItem(TOKEN_KEY);
+                    const [ordersRes, menuRes] = await Promise.all([
+                        fetch(`${API_BASE}/api/orders`, { headers: { 'Authorization': `Bearer ${token}` } }),
+                        fetch(`${API_BASE}/api/menu`)
+                    ]);
+
+                    if (!ordersRes.ok) throw new Error('Erreur ' + ordersRes.status);
+                    const orders = await ordersRes.json();
+                    const menu   = menuRes.ok ? await menuRes.json() : [];
+
+                    const menuMap = {};
+                    menu.forEach((m) => { menuMap[m.id] = m.name; });
+
+                    if (!orders.length) {
+                        listEl.innerHTML = '<p class="description" style="text-align:center; padding:40px 0;">Aucune commande pour le moment.</p>';
+                        return;
+                    }
+
+                    listEl.innerHTML = '';
+                    orders.slice().reverse().forEach((order) => {
+                        const s    = STATUS_LABELS[order.status] || { text: order.status, color: '#aaa' };
+                        const date = new Date(order.created_at).toLocaleString('fr-FR', { dateStyle: 'long', timeStyle: 'short' });
+
+                        const card = document.createElement('div');
+                        card.className = 'order-history-card';
+
+                        const itemsHtml = (order.items || []).map((i) => {
+                            const name     = menuMap[i.menu_item_id] || 'Article #' + i.menu_item_id;
+                            const subtotal = Number(i.price * i.quantity).toFixed(2);
+                            return `<tr>
+                                <td>${name}</td>
+                                <td style="text-align:center;">${i.quantity}</td>
+                                <td style="text-align:right;">${Number(i.price).toFixed(2)} €</td>
+                                <td style="text-align:right;">${subtotal} €</td>
+                            </tr>`;
+                        }).join('');
+
+                        card.innerHTML = `
+                            <div class="order-history-header">
+                                <span class="order-history-id">Commande #${order.order_id}</span>
+                                <span class="order-history-badge" style="color:${s.color}; border-color:${s.color};">${s.text}</span>
+                            </div>
+                            <p class="order-history-date">${date}</p>
+                            <table class="order-history-table">
+                                <thead>
+                                    <tr>
+                                        <th>Produit</th>
+                                        <th style="text-align:center;">Qte</th>
+                                        <th style="text-align:right;">Prix unit.</th>
+                                        <th style="text-align:right;">Sous-total</th>
+                                    </tr>
+                                </thead>
+                                <tbody>${itemsHtml}</tbody>
+                            </table>
+                            <p class="order-history-total">Total : ${Number(order.total).toFixed(2)} €</p>
+                        `;
+
+                        listEl.appendChild(card);
+                    });
+
+                } catch (err) {
+                    document.getElementById('orders-list').innerHTML =
+                        `<p style="color:#ff4d4d; text-align:center; padding:40px 0;">Impossible de charger les commandes.<br><small>${err.message}</small></p>`;
+                }
+            }
+
+            document.getElementById('back-btn').addEventListener('click', function () {
+                window.history.length > 1 ? window.history.back() : window.location.href = 'commande.html';
+            });
+
+            document.getElementById('home-btn').addEventListener('click', function () {
+                window.location.href = 'index.html';
+            });
+
+            loadOrders();
+        </script>
+    </body>
+</html>

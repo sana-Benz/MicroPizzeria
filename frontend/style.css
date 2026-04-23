@@ -198,6 +198,83 @@
     color: var(--orange);
 }
 
+/* Order history modal */
+.orders-modal-card {
+    background: #0f0f0f;
+    border: 1px solid rgba(255,172,12,0.55);
+    border-radius: 12px;
+    padding: 28px;
+    width: min(640px, 100%);
+    margin: auto;
+}
+
+.order-history-card {
+    border: 1px solid #1f1f1f;
+    border-radius: 10px;
+    padding: 16px;
+    margin-bottom: 14px;
+    background: #131313;
+}
+
+.order-history-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+}
+
+.order-history-id {
+    font-weight: 700;
+    font-size: 1rem;
+}
+
+.order-history-badge {
+    font-size: 0.8rem;
+    font-weight: 600;
+    border: 1px solid;
+    border-radius: 999px;
+    padding: 2px 10px;
+}
+
+.order-history-date {
+    margin: 0 0 10px;
+    font-size: 0.85rem;
+    color: var(--grey);
+}
+
+.order-history-items {
+    margin: 0 0 10px;
+    padding-left: 18px;
+    font-size: 0.9rem;
+    color: #ddd;
+    line-height: 1.7;
+}
+
+.order-history-total {
+    margin: 12px 0 0;
+    font-weight: 700;
+    color: var(--orange);
+    font-size: 0.95rem;
+}
+
+.order-history-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+}
+
+.order-history-table th,
+.order-history-table td {
+    padding: 8px 6px;
+    border-bottom: 1px solid #2a2a2a;
+}
+
+.order-history-table th {
+    color: var(--orange);
+    font-weight: 600;
+    text-align: left;
+}
+
 .summary-page {
     margin: 20px 0 60px;
     display: flex;

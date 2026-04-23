@@ -17,6 +17,7 @@
             <button type="button" id="track-order-btn">Suivi de commande</button>
         </div>
 
+
         <main class="order-page">
             <section class="order-section">
                 <p class="mini-title">Nos specialites</p>
@@ -48,8 +49,9 @@
         </main>
 
         <script>
-            const API_BASE = '';
-            const CART_KEY = "microPizzeriaCart";
+            const API_BASE  = '';
+            const TOKEN_KEY = 'microPizzeriaToken';
+            const CART_KEY  = "microPizzeriaCart";
             const ORDER_STATUS_KEY = "microPizzeriaOrderStatus";
             const ORDER_CONFIRMED_AT_KEY = "microPizzeriaOrderConfirmedAt";
 
@@ -212,11 +214,10 @@
             });
 
             document.getElementById('track-order-btn').addEventListener('click', function () {
-                const status = getOrderStatus();
-                alert(status === 'livree' ? 'Commande livree.' : 'Commande en cours.');
+                window.location.href = 'historique.html';
             });
 
-            if (!localStorage.getItem('microPizzeriaToken')) {
+            if (!localStorage.getItem(TOKEN_KEY)) {
                 window.location.href = 'auth.html';
             } else {
                 loadMenu();
