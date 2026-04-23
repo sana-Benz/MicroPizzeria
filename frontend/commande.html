@@ -126,19 +126,33 @@
                     <p class="description">${item.description}</p>
                     <p class="price">${item.price}€</p>
                     <div class="quantity-row">
-                        <input type="number" min="0" value="${currentQty}" aria-label="Quantite ${item.name}">
-                        <button type="button" class="validate-item-btn">Valider la quantite</button>
+                        <button type="button" class="qty-btn qty-minus">−</button>
+                        <span class="qty-value">${currentQty}</span>
+                        <button type="button" class="qty-btn qty-plus">+</button>
                     </div>
-                    <p class="item-status" aria-live="polite">${currentQty > 0 ? 'Quantite deja enregistree' : ''}</p>
+                    <button type="button" class="remove-item-btn">Retirer du panier</button>
+                    <p class="item-status" aria-live="polite">${currentQty > 0 ? 'Dans votre panier' : ''}</p>
                 `;
 
-                article.querySelector('.validate-item-btn').addEventListener('click', function () {
-                    const input = article.querySelector('input[type="number"]');
-                    const status = article.querySelector('.item-status');
-                    const quantity = Math.max(0, Number(input.value) || 0);
-                    input.value = quantity;
-                    upsertItem(item.id, item.name, item.price, quantity);
-                    status.textContent = quantity > 0 ? 'Quantite validee' : 'Produit retire de la commande';
+                const statusEl = article.querySelector('.item-status');
+                const qtyEl    = article.querySelector('.qty-value');
+
+                function updateQty(newQty) {
+                    qtyEl.textContent = newQty;
+                    upsertItem(item.id, item.name, item.price, newQty);
+                    statusEl.textContent = newQty > 0 ? 'Dans votre panier' : 'Produit retire du panier';
+                }
+
+                article.querySelector('.qty-plus').addEventListener('click', function () {
+                    updateQty(Number(qtyEl.textContent) + 1);
+                });
+
+                article.querySelector('.qty-minus').addEventListener('click', function () {
+                    updateQty(Math.max(0, Number(qtyEl.textContent) - 1));
+                });
+
+                article.querySelector('.remove-item-btn').addEventListener('click', function () {
+                    updateQty(0);
                 });
 
                 return article;
@@ -173,8 +187,7 @@
                     const id = Number(card.dataset.id);
                     const name = card.dataset.name;
                     const unitPrice = Number(card.dataset.price);
-                    const input = card.querySelector('input[type="number"]');
-                    const quantity = Math.max(0, Number(input.value) || 0);
+                    const quantity = Math.max(0, Number(card.querySelector('.qty-value').textContent) || 0);
                     upsertItem(id, name, unitPrice, quantity);
                 });
 

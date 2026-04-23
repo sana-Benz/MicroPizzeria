@@ -79,19 +79,71 @@
 .quantity-row {
     margin-top: auto;
     display: flex;
-    gap: 8px;
+    width: 100%;  
+    align-items: center; 
+    border: 1.5px solid var(--orange);
+    border-radius: 999px;
+    overflow: hidden;
+    background: #111;
+    height: 42px; 
+    margin-bottom: 10px; 
 }
 
-.quantity-row input {
-    width: 78px;
-    padding: 8px;
-    border: 1px solid #333;
-    background-color: #0e0e0e;
+.qty-btn {
+    width: 42px;
+    height: 42px;
+    background: transparent;
+    color: var(--orange);
+    border: none;
+    font-size: 1.5rem;
+    font-weight: 300;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    line-height: 1; 
+}
+
+.qty-btn:hover {
+    background: var(--orange);
+    color: #111;
+}
+
+.qty-value {
+    flex: 1;   
+    min-width: 44px;
+    text-align: center;
+    font-size: 1rem;
+    font-weight: 700;
     color: white;
-    border-radius: 6px;
+    border-left: 1px solid rgba(255,172,12,0.3);
+    border-right: 1px solid rgba(255,172,12,0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    user-select: none;
 }
 
-.quantity-row button,
+.remove-item-btn {
+    margin-top: 0;
+    width: 100%;
+    padding: 8px;
+    background: transparent;
+    color: #ff4d4d;
+    border: 1px solid #ff4d4d;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: all 0.3s;
+}
+
+.remove-item-btn:hover {
+    background: #ff4d4d;
+    color: white;
+}
+
 .order-submit button {
     padding: 10px 14px;
     background-color: inherit;
@@ -102,7 +154,6 @@
     transition: all 0.35s;
 }
 
-.quantity-row button:hover,
 .order-submit button:hover {
     background-color: var(--orange);
     color: white;

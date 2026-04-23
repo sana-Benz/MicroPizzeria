@@ -53,6 +53,12 @@
                 return JSON.parse(localStorage.getItem(CART_KEY) || '[]').filter((i) => i.quantity > 0);
             }
 
+            function removeFromCart(name) {
+                const cart = getCart().filter((i) => i.name !== name);
+                localStorage.setItem(CART_KEY, JSON.stringify(cart));
+                renderSummary();
+            }
+
             function formatPrice(value) {
                 return Number(value).toFixed(2) + ' €';
             }
@@ -76,35 +82,49 @@
             // ── Render cart table ───────────────────────────────────────
             function renderSummary() {
                 const container = document.getElementById('summary-content');
+                const confirmBtn = document.getElementById('confirm-order-btn');
                 const cart = getCart();
 
                 if (!cart.length) {
-                    container.innerHTML = "<p class='description'>Aucun produit selectionne. Retournez sur la page commande.</p>";
-                    document.getElementById('confirm-order-btn').disabled = true;
+                    container.innerHTML = "<p class='description' style='text-align:center; padding:20px 0;'>Votre panier est vide.</p>";
+                    confirmBtn.disabled = true;
                     return;
                 }
 
-                let rows = '';
+                confirmBtn.disabled = false;
+
                 let total = 0;
+                const tbody = document.createElement('tbody');
 
                 cart.forEach((item) => {
                     const lineTotal = item.unitPrice * item.quantity;
                     total += lineTotal;
-                    rows +=
-                        '<tr>' +
+                    const tr = document.createElement('tr');
+                    tr.innerHTML =
                         '<td>' + item.name + '</td>' +
                         '<td>' + item.quantity + '</td>' +
                         '<td>' + formatPrice(item.unitPrice) + '</td>' +
                         '<td>' + formatPrice(lineTotal) + '</td>' +
-                        '</tr>';
+                        '<td><button type="button" class="remove-row-btn" style="background:inherit; color:#ff4d4d; border:1px solid #ff4d4d; border-radius:5px; padding:4px 10px; cursor:pointer; font-size:0.85rem;">Retirer</button></td>';
+                    tr.querySelector('.remove-row-btn').addEventListener('click', function () {
+                        removeFromCart(item.name);
+                    });
+                    tbody.appendChild(tr);
                 });
 
-                container.innerHTML =
-                    "<table class='summary-table'>" +
-                    '<thead><tr><th>Produit</th><th>Quantite</th><th>Prix unite</th><th>Sous-total</th></tr></thead>' +
-                    '<tbody>' + rows + '</tbody>' +
-                    '</table>' +
-                    "<p class='summary-total'>Montant total : " + formatPrice(total) + '</p>';
+                const table = document.createElement('table');
+                table.className = 'summary-table';
+                table.innerHTML =
+                    '<thead><tr><th>Produit</th><th>Quantite</th><th>Prix unite</th><th>Sous-total</th><th></th></tr></thead>';
+                table.appendChild(tbody);
+
+                container.innerHTML = '';
+                container.appendChild(table);
+
+                const totalEl = document.createElement('p');
+                totalEl.className = 'summary-total';
+                totalEl.textContent = 'Montant total : ' + formatPrice(total);
+                container.appendChild(totalEl);
             }
 
             // ── Finaliser ───────────────────────────────────────────────
