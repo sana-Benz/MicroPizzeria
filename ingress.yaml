@@ -30,3 +30,11 @@ spec:
                 name: order-service
                 port:
                   number: 5002
+
+          - path: /()(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: frontend
+                port:
+                  number: 80

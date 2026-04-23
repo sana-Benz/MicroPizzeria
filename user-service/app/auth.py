@@ -5,9 +5,11 @@ import bcrypt
 from flask import current_app
 
 def hash_password(password):
-    return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
+    return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
 
 def check_password(password, hashed):
+    if isinstance(hashed, str):
+        hashed = hashed.encode('utf-8')
     return bcrypt.checkpw(password.encode('utf-8'), hashed)
 
 def generate_token(user_id):

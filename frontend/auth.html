@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="fr">
+    <head>
+        <meta charset="utf-8">
+        <title>Connexion | La Micro Pizzeria</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="style.css">
+        <style>
+            .auth-page {
+                min-height: 90vh;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+            .auth-card {
+                width: min(440px, 100%);
+                border: 1px solid rgba(255, 172, 12, 0.55);
+                border-radius: 12px;
+                padding: 32px;
+                background-color: #0f0f0f;
+            }
+            .auth-logo {
+                text-align: center;
+                font-size: 1.8rem;
+                font-weight: 700;
+                margin-bottom: 28px;
+            }
+            .auth-logo span { color: var(--orange); }
+            .auth-tabs {
+                display: flex;
+                border-bottom: 1px solid #333;
+                margin-bottom: 28px;
+            }
+            .auth-tab {
+                flex: 1;
+                padding: 10px;
+                background: none;
+                border: none;
+                border-bottom: 2px solid transparent;
+                color: var(--grey);
+                font-size: 1rem;
+                cursor: pointer;
+                transition: all 0.3s;
+            }
+            .auth-tab.active {
+                color: var(--orange);
+                border-bottom: 2px solid var(--orange);
+            }
+            .auth-form {
+                display: none;
+                flex-direction: column;
+                gap: 14px;
+            }
+            .auth-form.active { display: flex; }
+            .auth-form label {
+                display: flex;
+                flex-direction: column;
+                gap: 6px;
+                font-size: 0.9rem;
+            }
+            .auth-form input {
+                padding: 10px 12px;
+                border: 1px solid #333;
+                border-radius: 6px;
+                background-color: #111;
+                color: white;
+                font-size: 1rem;
+                outline: none;
+                transition: border-color 0.3s;
+            }
+            .auth-form input:focus { border-color: var(--orange); }
+            .auth-submit {
+                margin-top: 6px;
+                padding: 12px;
+                background-color: inherit;
+                color: var(--orange);
+                border: 1px solid var(--orange);
+                border-radius: 6px;
+                font-size: 1rem;
+                cursor: pointer;
+                transition: all 0.35s;
+            }
+            .auth-submit:hover {
+                background-color: var(--orange);
+                color: white;
+            }
+            .auth-error {
+                color: #ff4d4d;
+                font-size: 0.9rem;
+                min-height: 20px;
+                text-align: center;
+            }
+        </style>
+    </head>
+    <body>
+        <main class="auth-page">
+            <div class="auth-card">
+                <div class="auth-logo">La <span>Micro</span> Pizzeria</div>
+
+                <div class="auth-tabs">
+                    <button class="auth-tab active" id="tab-login">Se connecter</button>
+                    <button class="auth-tab" id="tab-signup">S'inscrire</button>
+                </div>
+
+                <form class="auth-form active" id="form-login">
+                    <label>
+                        Email
+                        <input type="email" id="login-email" required placeholder="votre@email.com">
+                    </label>
+                    <label>
+                        Mot de passe
+                        <input type="password" id="login-password" required placeholder="••••••••">
+                    </label>
+                    <p class="auth-error" id="login-error"></p>
+                    <button type="submit" class="auth-submit">Se connecter</button>
+                </form>
+
+                <form class="auth-form" id="form-signup">
+                    <label>
+                        Nom complet
+                        <input type="text" id="signup-name" required placeholder="Jean Dupont">
+                    </label>
+                    <label>
+                        Email
+                        <input type="email" id="signup-email" required placeholder="votre@email.com">
+                    </label>
+                    <label>
+                        Mot de passe
+                        <input type="password" id="signup-password" required placeholder="••••••••">
+                    </label>
+                    <label>
+                        Téléphone
+                        <input type="tel" id="signup-phone" placeholder="06 12 34 56 78">
+                    </label>
+                    <label>
+                        Adresse de livraison
+                        <input type="text" id="signup-address" placeholder="12 rue de la Paix, Paris">
+                    </label>
+                    <p class="auth-error" id="signup-error"></p>
+                    <button type="submit" class="auth-submit">Créer mon compte</button>
+                </form>
+            </div>
+        </main>
+
+        <script>
+            const API_BASE = '';
+            const TOKEN_KEY = 'microPizzeriaToken';
+
+            if (localStorage.getItem(TOKEN_KEY)) {
+                window.location.href = 'commande.html';
+            }
+
+            document.getElementById('tab-login').addEventListener('click', function () {
+                document.getElementById('tab-login').classList.add('active');
+                document.getElementById('tab-signup').classList.remove('active');
+                document.getElementById('form-login').classList.add('active');
+                document.getElementById('form-signup').classList.remove('active');
+                document.getElementById('login-error').textContent = '';
+            });
+
+            document.getElementById('tab-signup').addEventListener('click', function () {
+                document.getElementById('tab-signup').classList.add('active');
+                document.getElementById('tab-login').classList.remove('active');
+                document.getElementById('form-signup').classList.add('active');
+                document.getElementById('form-login').classList.remove('active');
+                document.getElementById('signup-error').textContent = '';
+            });
+
+            async function doLogin(email, password) {
+                const res = await fetch(`${API_BASE}/api/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+                if (!res.ok) throw new Error('Email ou mot de passe incorrect.');
+                const data = await res.json();
+                localStorage.setItem(TOKEN_KEY, data.token);
+            }
+
+            document.getElementById('form-login').addEventListener('submit', async function (e) {
+                e.preventDefault();
+                const errorEl = document.getElementById('login-error');
+                errorEl.textContent = '';
+                try {
+                    await doLogin(
+                        document.getElementById('login-email').value,
+                        document.getElementById('login-password').value
+                    );
+                    window.location.href = 'commande.html';
+                } catch (err) {
+                    errorEl.textContent = err.message;
+                }
+            });
+
+            document.getElementById('form-signup').addEventListener('submit', async function (e) {
+                e.preventDefault();
+                const errorEl = document.getElementById('signup-error');
+                errorEl.textContent = '';
+                const email = document.getElementById('signup-email').value;
+                const password = document.getElementById('signup-password').value;
+                try {
+                    const res = await fetch(`${API_BASE}/api/auth/register`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            name: document.getElementById('signup-name').value,
+                            email,
+                            password,
+                            phone: document.getElementById('signup-phone').value,
+                            address: document.getElementById('signup-address').value,
+                        })
+                    });
+                    if (!res.ok) {
+                        const data = await res.json();
+                        throw new Error(data.error || "Erreur lors de l'inscription.");
+                    }
+                    await doLogin(email, password);
+                    window.location.href = 'commande.html';
+                } catch (err) {
+                    errorEl.textContent = err.message;
+                }
+            });
+        </script>
+    </body>
+</html>
