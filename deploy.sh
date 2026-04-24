@@ -2,6 +2,9 @@
 # Script conataining kubectl commands to deploy the application
 set -e
 
+echo ">>> Applying RBAC..."
+kubectl apply -f rbac.yaml
+
 echo ">>> Applying secrets..."
 kubectl apply -f user-service/k8s/secret.yaml
 kubectl apply -f order-service/k8s/secret.yaml
