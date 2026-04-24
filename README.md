@@ -12,7 +12,8 @@ La Micro Pizzeria est une application web de commande de pizzas basée sur une a
 4. [Configuration Kubernetes](#configuration-kubernetes)
 5. [Ingress & Routage](#ingress--routage)
 6. [Décisions d'architecture](#décisions-darchitecture)
-7. [Flux complet d'une requête](#flux-complet-dune-requête)
+7. [Sécurité](#sécurité)
+8. [Flux complet d'une requête](#flux-complet-dune-requête)
 
 ---
 
@@ -399,6 +400,21 @@ L'order-service ne contient aucune logique de décodage JWT. Lorsqu'il reçoit u
 ### Stratégie de mise à l'échelle
 
 Les deux services Flask étant sans état (tout l'état persistant est dans MySQL), les mettre à l'échelle horizontalement ne nécessite que d'augmenter le champ `replicas` dans le Deployment. Les instances MySQL sont intentionnellement maintenues à 1 réplica — la mise à l'échelle horizontale de MySQL nécessite des outils dédiés (ex. réplicas en lecture, MySQL Operator) qui sortent du cadre de ce projet.
+
+---
+
+## Sécurité
+
+La sécurité a été intégrée à plusieurs niveaux du projet, aussi bien au niveau réseau et infrastructure qu'applicatif. L'objectif est de limiter la surface d'attaque, d'isoler les composants entre eux et de protéger les données sensibles tout au long du cycle de vie de l'application.
+
+- **Exposition réseau minimale** — tous les services backend (user-service, order-service, bases de données) sont exposés en `ClusterIP` uniquement : ils ne sont pas accessibles depuis l'extérieur du cluster. Seul l'Ingress Controller constitue le point d'entrée public.
+- **TLS sur l'Ingress** — le trafic entrant est chiffré via un certificat TLS auto-signé configuré sur l'Ingress Nginx, avec redirection automatique HTTP → HTTPS.
+- **Secrets Kubernetes** — les credentials sensibles (mots de passe MySQL, clé de signature JWT) sont stockés dans des objets `Secret` Kubernetes et injectés comme variables d'environnement dans les pods. Ces fichiers ne sont pas commités dans le dépôt Git.
+- **Authentification JWT** — les tokens d'accès sont des JWT signés en HS256 avec une durée de validité d'1 heure. Les mots de passe utilisateurs sont hachés avec **bcrypt** (salage automatique, résistant aux attaques par force brute).
+- **RBAC Kubernetes** — chaque service applicatif dispose de son propre `ServiceAccount`, associé à un `Role` et un `RoleBinding` qui ne lui accordent que les permissions strictement nécessaires (principe du moindre privilège). Aucun service n'a accès aux ressources Kubernetes d'un autre.
+- **Durcissement des containers** — tous les containers applicatifs sont configurés avec `allowPrivilegeEscalation: false`, empêchant tout processus d'obtenir des privilèges supplémentaires au sein du container.
+- **Isolation des données** — chaque service possède sa propre instance MySQL dédiée ce qui est en accord avec le pattern database per service. Il n'existe aucune base partagée entre services, ce qui limite la propagation en cas de compromission.
+- **Scan de vulnérabilités** — les images Docker ont été analysées avec [Trivy](https://github.com/aquasecurity/trivy). Aucune vulnérabilité de niveau **CRITICAL** n'a été détectée au moment du déploiement.
 
 ---
 
