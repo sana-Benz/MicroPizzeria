@@ -1,0 +1,107 @@
+# ServiceAccount for each service
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: user-service-sa
+  namespace: default
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: order-service-sa
+  namespace: default
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: frontend-sa
+  namespace: default
+
+---
+# Permissions for user-service : read only user-service secrets     
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: user-service-role
+  namespace: default
+rules:
+  - apiGroups: [""]
+    resources: ["secrets"]
+    resourceNames: ["user-service-secret"]
+    verbs: ["get"]
+
+---
+# Permissions for order-service : read only order-service secrets  
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: order-service-role
+  namespace: default
+rules:
+  - apiGroups: [""]
+    resources: ["secrets"]
+    resourceNames: ["order-service-secret"]
+    verbs: ["get"]
+
+---
+# Permissions for frontend : lowest permission read only configmaps
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: frontend-role
+  namespace: default
+rules:
+  - apiGroups: [""]
+    resources: ["configmaps"]
+    verbs: ["get", "list"]
+
+---
+# RoleBinding user-service
+# the ServiceAccount user-service-sa gets the permissions of the Role user-service-role.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: user-service-binding
+  namespace: default
+subjects:
+  - kind: ServiceAccount
+    name: user-service-sa
+    namespace: default
+roleRef:
+  kind: Role
+  name: user-service-role
+  apiGroup: rbac.authorization.k8s.io
+
+---
+# RoleBinding order-service
+# the ServiceAccount order-service-sa gets the permissions of the Role order-service-role.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: order-service-binding
+  namespace: default
+subjects:
+  - kind: ServiceAccount
+    name: order-service-sa
+    namespace: default
+roleRef:
+  kind: Role
+  name: order-service-role
+  apiGroup: rbac.authorization.k8s.io
+
+---
+# RoleBinding frontend
+# the ServiceAccount frontend-sa gets the permissions of the Role frontend-role.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: frontend-binding
+  namespace: default
+subjects:
+  - kind: ServiceAccount
+    name: frontend-sa
+    namespace: default
+roleRef:
+  kind: Role
+  name: frontend-role
+  apiGroup: rbac.authorization.k8s.io

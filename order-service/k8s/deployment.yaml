@@ -12,6 +12,7 @@ spec:
       labels:
         app: order-service
     spec:
+      serviceAccountName: order-service-sa
       initContainers:
         - name: wait-for-mysql # waits till mysql is ready before starting the Flask container
           image: busybox:1.35
@@ -22,6 +23,10 @@ spec:
           imagePullPolicy: Always
           ports:
             - containerPort: 5002
+          securityContext:
+            runAsNonRoot: false
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: false
           env: # environment variables
             - name: DB_PASSWORD #pulls the password from the secret
               valueFrom:

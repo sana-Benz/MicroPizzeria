@@ -13,6 +13,7 @@ spec:
       labels:
         app: user-service
     spec:
+      serviceAccountName: user-service-sa
       initContainers:
         - name: wait-for-mysql
           image: busybox:1.35
@@ -23,6 +24,10 @@ spec:
           imagePullPolicy: Always
           ports:
             - containerPort: 5001
+          securityContext:
+            runAsNonRoot: false
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: false
           env: # pulls secrets from secret.yaml
             - name: SECRET_KEY
               valueFrom:
