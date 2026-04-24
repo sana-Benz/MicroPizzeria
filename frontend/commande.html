@@ -10,13 +10,64 @@
     <body>
         <header class="order-header">
             <h1>La <span>Micro</span> Pizzeria</h1>
-        </header>
-        <div class="page-tools">
-            <button type="button" id="back-btn">Retour page precedente</button>
-            <button type="button" id="home-btn">Retour accueil</button>
-            <button type="button" id="track-order-btn">Suivi de commande</button>
-        </div>
 
+            <div class="profile-menu-wrapper">
+                <button type="button" id="profile-icon-btn" class="profile-icon-btn" aria-label="Mon profil">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="8" r="4"/>
+                        <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+                    </svg>
+                </button>
+                <div id="profile-dropdown" class="profile-dropdown" style="display:none;">
+                    <button type="button" id="dd-profile">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+                        Mon Profil
+                    </button>
+                    <button type="button" id="dd-history">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="12 6 12 12 16 14"/></svg>
+                        Historique de commandes
+                    </button>
+                    <hr class="dropdown-divider">
+                    <button type="button" id="dd-logout" class="dropdown-logout">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                        Se déconnecter
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Profile modal -->
+        <div id="profile-modal" class="modal-overlay" style="display:none;">
+            <div class="profile-card">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                    <h2 style="margin:0;">Mon Profil</h2>
+                    <button type="button" id="close-profile-btn" style="background:none; border:none; color:white; font-size:1.6rem; cursor:pointer; line-height:1;">&times;</button>
+                </div>
+
+                <!-- View -->
+                <div id="profile-view">
+                    <div class="profile-row"><span class="profile-label">Nom</span><span id="p-name"></span></div>
+                    <div class="profile-row"><span class="profile-label">Email</span><span id="p-email"></span></div>
+                    <div class="profile-row"><span class="profile-label">Téléphone</span><span id="p-phone"></span></div>
+                    <div class="profile-row"><span class="profile-label">Adresse</span><span id="p-address"></span></div>
+                    <div class="profile-actions">
+                        <button type="button" id="edit-btn">Modifier</button>
+                    </div>
+                </div>
+
+                <!-- Edit -->
+                <form id="profile-edit" style="display:none; flex-direction:column; gap:14px;">
+                    <label class="profile-field-label">Nom<input type="text" id="edit-name"></label>
+                    <label class="profile-field-label">Téléphone<input type="tel" id="edit-phone"></label>
+                    <label class="profile-field-label">Adresse<input type="text" id="edit-address"></label>
+                    <p id="edit-error" style="color:#ff4d4d; font-size:0.85rem; margin:0; min-height:16px;"></p>
+                    <div class="profile-actions">
+                        <button type="submit">Sauvegarder</button>
+                        <button type="button" id="cancel-edit-btn">Annuler</button>
+                    </div>
+                </form>
+            </div>
+        </div>
 
         <main class="order-page">
             <section class="order-section">
@@ -51,9 +102,7 @@
         <script>
             const API_BASE  = '';
             const TOKEN_KEY = 'microPizzeriaToken';
-            const CART_KEY  = "microPizzeriaCart";
-            const ORDER_STATUS_KEY = "microPizzeriaOrderStatus";
-            const ORDER_CONFIRMED_AT_KEY = "microPizzeriaOrderConfirmedAt";
+            const CART_KEY  = 'microPizzeriaCart';
 
             const IMAGE_MAP = {
                 'Margherita':              'images/menu_items/pizza_margharita.jpeg',
@@ -75,53 +124,35 @@
                 'Crostata à la confiture': 'images/menu_items/dessert_crostata.jpg',
             };
 
+            // ── Cart ────────────────────────────────────────────────────
             function getCart() {
-                return JSON.parse(localStorage.getItem(CART_KEY) || "[]");
+                return JSON.parse(localStorage.getItem(CART_KEY) || '[]');
             }
-
             function saveCart(cart) {
                 localStorage.setItem(CART_KEY, JSON.stringify(cart));
             }
-
-            function getOrderStatus() {
-                const status = localStorage.getItem(ORDER_STATUS_KEY);
-                const confirmedAt = Number(localStorage.getItem(ORDER_CONFIRMED_AT_KEY) || 0);
-                if (status === "en_cours" && confirmedAt > 0 && Date.now() - confirmedAt > 60000) {
-                    localStorage.setItem(ORDER_STATUS_KEY, "livree");
-                    return "livree";
-                }
-                return status || "en_cours";
-            }
-
             function upsertItem(id, name, unitPrice, quantity) {
                 const cart = getCart().filter((item) => item.quantity > 0);
                 const index = cart.findIndex((item) => item.name === name);
                 if (quantity > 0) {
-                    const nextItem = { id, name, unitPrice, quantity };
-                    if (index >= 0) {
-                        cart[index] = nextItem;
-                    } else {
-                        cart.push(nextItem);
-                    }
+                    const next = { id, name, unitPrice, quantity };
+                    if (index >= 0) cart[index] = next; else cart.push(next);
                 } else if (index >= 0) {
                     cart.splice(index, 1);
                 }
                 saveCart(cart);
             }
 
+            // ── Menu cards ──────────────────────────────────────────────
             function createCard(item) {
-                const cart = getCart();
-                const existing = cart.find((c) => c.name === item.name);
+                const existing   = getCart().find((c) => c.name === item.name);
                 const currentQty = existing ? existing.quantity : 0;
-
-                const article = document.createElement('article');
-                article.className = 'order-card';
-                article.dataset.id = item.id;
+                const article    = document.createElement('article');
+                article.className    = 'order-card';
+                article.dataset.id   = item.id;
                 article.dataset.name = item.name;
                 article.dataset.price = item.price;
-
                 const imgSrc = IMAGE_MAP[item.name] || 'images/menu_items/pizza_margharita.jpeg';
-
                 article.innerHTML = `
                     <img src="${imgSrc}" alt="${item.name}">
                     <h3>${item.name}</h3>
@@ -135,45 +166,30 @@
                     <button type="button" class="remove-item-btn">Retirer du panier</button>
                     <p class="item-status" aria-live="polite">${currentQty > 0 ? 'Dans votre panier' : ''}</p>
                 `;
-
                 const statusEl = article.querySelector('.item-status');
                 const qtyEl    = article.querySelector('.qty-value');
-
-                function updateQty(newQty) {
-                    qtyEl.textContent = newQty;
-                    upsertItem(item.id, item.name, item.price, newQty);
-                    statusEl.textContent = newQty > 0 ? 'Dans votre panier' : 'Produit retire du panier';
+                function updateQty(n) {
+                    qtyEl.textContent = n;
+                    upsertItem(item.id, item.name, item.price, n);
+                    statusEl.textContent = n > 0 ? 'Dans votre panier' : 'Produit retire du panier';
                 }
-
-                article.querySelector('.qty-plus').addEventListener('click', function () {
-                    updateQty(Number(qtyEl.textContent) + 1);
-                });
-
-                article.querySelector('.qty-minus').addEventListener('click', function () {
-                    updateQty(Math.max(0, Number(qtyEl.textContent) - 1));
-                });
-
-                article.querySelector('.remove-item-btn').addEventListener('click', function () {
-                    updateQty(0);
-                });
-
+                article.querySelector('.qty-plus').addEventListener('click', () => updateQty(Number(qtyEl.textContent) + 1));
+                article.querySelector('.qty-minus').addEventListener('click', () => updateQty(Math.max(0, Number(qtyEl.textContent) - 1)));
+                article.querySelector('.remove-item-btn').addEventListener('click', () => updateQty(0));
                 return article;
             }
 
             async function loadMenu() {
                 try {
-                    const response = await fetch(`${API_BASE}/api/menu`);
-                    if (!response.ok) throw new Error();
-                    const items = await response.json();
-
+                    const res   = await fetch(`${API_BASE}/api/menu`);
+                    if (!res.ok) throw new Error();
+                    const items = await res.json();
                     const grids = {
                         pizza:   document.getElementById('pizza-grid'),
                         drink:   document.getElementById('drink-grid'),
                         dessert: document.getElementById('dessert-grid'),
                     };
-
                     Object.values(grids).forEach((g) => (g.innerHTML = ''));
-
                     items.forEach((item) => {
                         const grid = grids[item.category];
                         if (grid) grid.appendChild(createCard(item));
@@ -184,39 +200,121 @@
                 }
             }
 
+            // ── Validate cart ───────────────────────────────────────────
             document.getElementById('go-to-summary-btn').addEventListener('click', function () {
                 document.querySelectorAll('.order-card').forEach((card) => {
-                    const id = Number(card.dataset.id);
-                    const name = card.dataset.name;
-                    const unitPrice = Number(card.dataset.price);
-                    const quantity = Math.max(0, Number(card.querySelector('.qty-value').textContent) || 0);
-                    upsertItem(id, name, unitPrice, quantity);
+                    upsertItem(
+                        Number(card.dataset.id),
+                        card.dataset.name,
+                        Number(card.dataset.price),
+                        Math.max(0, Number(card.querySelector('.qty-value').textContent) || 0)
+                    );
                 });
-
-                const cart = getCart();
-                if (!cart.length) {
+                if (!getCart().filter((i) => i.quantity > 0).length) {
                     alert('Selectionnez au moins un produit avant de valider.');
                     return;
                 }
                 window.location.href = 'recapitulatif.html';
             });
 
-            document.getElementById('back-btn').addEventListener('click', function () {
-                if (window.history.length > 1) {
-                    window.history.back();
-                } else {
-                    window.location.href = 'index.html';
-                }
+            // ── Profile dropdown ────────────────────────────────────────
+            const dropdown = document.getElementById('profile-dropdown');
+
+            document.getElementById('profile-icon-btn').addEventListener('click', function (e) {
+                e.stopPropagation();
+                dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
             });
 
-            document.getElementById('home-btn').addEventListener('click', function () {
-                window.location.href = 'index.html';
+            document.addEventListener('click', function () {
+                dropdown.style.display = 'none';
             });
 
-            document.getElementById('track-order-btn').addEventListener('click', function () {
+            dropdown.addEventListener('click', function (e) {
+                e.stopPropagation();
+            });
+
+            document.getElementById('dd-history').addEventListener('click', function () {
+                dropdown.style.display = 'none';
                 window.location.href = 'historique.html';
             });
 
+            document.getElementById('dd-logout').addEventListener('click', function () {
+                localStorage.removeItem(TOKEN_KEY);
+                localStorage.removeItem(CART_KEY);
+                window.location.href = 'index.html';
+            });
+
+            // ── Profile modal ───────────────────────────────────────────
+            const profileModal = document.getElementById('profile-modal');
+            const profileView  = document.getElementById('profile-view');
+            const profileEdit  = document.getElementById('profile-edit');
+
+            function showProfileView() { profileView.style.display = 'block'; profileEdit.style.display = 'none'; }
+            function showProfileEdit() { profileView.style.display = 'none';  profileEdit.style.display = 'flex'; }
+
+            async function loadProfile() {
+                const res = await fetch(`${API_BASE}/api/users/me`, {
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem(TOKEN_KEY)}` }
+                });
+                if (!res.ok) return;
+                const u = await res.json();
+                document.getElementById('p-name').textContent    = u.name    || '—';
+                document.getElementById('p-email').textContent   = u.email   || '—';
+                document.getElementById('p-phone').textContent   = u.phone   || '—';
+                document.getElementById('p-address').textContent = u.address || '—';
+                document.getElementById('edit-name').value    = u.name    || '';
+                document.getElementById('edit-phone').value   = u.phone   || '';
+                document.getElementById('edit-address').value = u.address || '';
+            }
+
+            document.getElementById('dd-profile').addEventListener('click', async function () {
+                dropdown.style.display = 'none';
+                showProfileView();
+                profileModal.style.display = 'flex';
+                await loadProfile();
+            });
+
+            document.getElementById('close-profile-btn').addEventListener('click', function () {
+                profileModal.style.display = 'none';
+            });
+
+            profileModal.addEventListener('click', function (e) {
+                if (e.target === profileModal) profileModal.style.display = 'none';
+            });
+
+            document.getElementById('edit-btn').addEventListener('click', showProfileEdit);
+
+            document.getElementById('cancel-edit-btn').addEventListener('click', function () {
+                document.getElementById('edit-error').textContent = '';
+                showProfileView();
+            });
+
+            document.getElementById('profile-edit').addEventListener('submit', async function (e) {
+                e.preventDefault();
+                const errorEl = document.getElementById('edit-error');
+                errorEl.textContent = '';
+                try {
+                    const res = await fetch(`${API_BASE}/api/users/me`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${localStorage.getItem(TOKEN_KEY)}`
+                        },
+                        body: JSON.stringify({
+                            name:    document.getElementById('edit-name').value,
+                            phone:   document.getElementById('edit-phone').value,
+                            address: document.getElementById('edit-address').value,
+                        })
+                    });
+                    if (!res.ok) throw new Error('Erreur lors de la mise à jour.');
+                    showProfileView();
+                    await loadProfile();
+                } catch (err) {
+                    errorEl.textContent = err.message;
+                }
+            });
+
+            // ── Boot ────────────────────────────────────────────────────
             if (!localStorage.getItem(TOKEN_KEY)) {
                 window.location.href = 'auth.html';
             } else {
