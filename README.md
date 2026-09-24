@@ -2,6 +2,8 @@
 
 La Micro Pizzeria est une application web de commande de pizzas basée sur une architecture microservices, déployée sur Kubernetes. Les utilisateurs peuvent parcourir le menu, composer un panier, passer des commandes et consulter leur historique — le tout servi par un seul contrôleur Nginx Ingress qui route le trafic vers des services backend indépendants.
 
+> 📄 Le rapport complet du projet est disponible ici : [MicroPizzeria_Project_Report_2025-2026.pdf](./MicroPizzeria_Project_Report_2025-2026.pdf)
+
 ---
 
 ## Table des matières
