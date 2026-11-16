@@ -1,25 +1,118 @@
 # La Micro Pizzeria - Projet de programmation distribuée
 
-La Micro Pizzeria est une application web de commande de pizzas basée sur une architecture microservices, déployée sur Kubernetes. Les utilisateurs peuvent parcourir le menu, composer un panier, passer des commandes et consulter leur historique — le tout servi par un seul contrôleur Nginx Ingress qui route le trafic vers des services backend indépendants.
+La Micro Pizzeria est une application web de commande de pizzas basée sur une architecture microservices, déployée sur Kubernetes. Les utilisateurs peuvent parcourir le menu, composer un panier, passer des commandes et consulter leur historique — le tout servi par un seul contrôleur Ingress qui route le trafic vers des services backend indépendants.
 
 > 📄 Le rapport complet du projet est disponible ici : [MicroPizzeria_Project_Report_2025-2026.pdf](./MicroPizzeria_Project_Report_2025-2026.pdf)
+
+> 🔀 **Deux versions du projet** : la version d'origine (déploiement autonome sur Minikube avec Nginx Ingress) est conservée sous le tag Git [`v1-minikube`](https://github.com/sana-Benz/MicroPizzeria/tree/v1-minikube). La version actuelle est adaptée pour [PRVue](https://github.com/sana-Benz/PRVue). Voir [PRVue Integration](#prvue-integration).
 
 ---
 
 ## Table des matières
 
-1. [Prérequis](#prérequis)
-2. [Commandes utiles](#commandes-utiles)
-3. [Architecture microservices](#architecture-microservices)
-4. [Configuration Kubernetes](#configuration-kubernetes)
-5. [Ingress & Routage](#ingress--routage)
-6. [Décisions d'architecture](#décisions-darchitecture)
-7. [Sécurité](#sécurité)
-8. [Flux complet d'une requête](#flux-complet-dune-requête)
+1. [PRVue Integration](#prvue-integration)
+2. [Prérequis](#prérequis)
+3. [Commandes utiles](#commandes-utiles)
+4. [Architecture microservices](#architecture-microservices)
+5. [Configuration Kubernetes](#configuration-kubernetes)
+6. [Ingress & Routage](#ingress--routage)
+7. [Décisions d'architecture](#décisions-darchitecture)
+8. [Sécurité](#sécurité)
+9. [Flux complet d'une requête](#flux-complet-dune-requête)
+
+---
+
+## PRVue Integration
+
+MicroPizzeria est l'**application de démonstration** de [PRVue](https://github.com/sana-Benz/PRVue), ma plateforme d'environnements de preview éphémères sur Kubernetes.
+
+**Objectif de PRVue** : chaque pull request ouverte sur MicroPizzeria obtient sa propre copie complète et isolée de l'application, avec sa propre URL. La copie est supprimée quand la PR est fermée.
+
+**Une évolution, pas un remplacement.** L'architecture de l'application ne change pas : mêmes trois services, mêmes deux bases MySQL, même code Python et HTML, mêmes Dockerfiles. Seule la façon de la **déployer** a évolué.
+
+### Les deux versions
+
+| | `v1-minikube` (tag) | Version actuelle (PRVue) |
+|---|---|---|
+| Cluster | Minikube | kind, créé par Terraform (dépôt PRVue) |
+| Déploiement | `deploy.sh` (`kubectl apply -f` fichier par fichier) | Kustomize (`kubectl apply -k .`) |
+| Namespace | `default` | Un namespace par environnement (`pr-12`, `pr-13`…) |
+| Contrôleur Ingress | Nginx (regex + `rewrite-target`) | Traefik (chemins `Prefix` + middleware `stripPrefix`) |
+| Adresse | IP de Minikube | Un nom par environnement : `http://pr-12.127-0-0-1.nip.io` |
+| Images | `sanabns/*:latest` (Docker Hub) | Prévu : `ghcr.io/sana-benz/micropizzeria-<service>:pr-<numéro>-<sha>` |
+| Secrets | `secret.yaml` créés à la main | Valeurs jetables générées par Kustomize pour les previews |
+
+Pour retrouver la version d'origine :
+```bash
+git switch --detach v1-minikube
+```
+
+### Ce qui a changé dans ce dépôt
+
+| Fichier | Rôle |
+|---|---|
+| `kustomization.yaml` | **Nouveau.** Point d'entrée Kustomize : liste les manifests existants (`*/k8s/`, `rbac.yaml`, `ingress.yaml`) et les adapte à l'environnement |
+| `namespace.yaml` | **Nouveau.** Le namespace fait partie de l'application, il est donc supprimé avec elle |
+| `traefik-middleware.yaml` | **Nouveau.** Retire `/api` avant de transmettre aux services Flask (remplace le `rewrite-target` de Nginx) |
+| `ingress.yaml` | **Modifié.** Nginx → Traefik, et un `host` par environnement |
+| `*/k8s/*.yaml`, `rbac.yaml` | **Inchangés** |
+
+### Namespaces dynamiques
+
+Tout part d'une seule valeur : le champ `namespace:` de `kustomization.yaml` (`micropizzeria` par défaut). Pour une PR, PRVue le remplacera par `pr-<numéro>`, et Kustomize en déduit le reste :
+- le namespace de toutes les ressources (y compris les `namespace: default` encore écrits dans les fichiers, qu'il remplace) ;
+- le host de l'Ingress : `pr-12.127-0-0-1.nip.io` ;
+- la référence au middleware Traefik : `pr-12-strip-api@kubernetescrd`.
+
+Chaque environnement a ses propres pods, ses propres bases MySQL et ses propres volumes (PVC). Les services se parlent par nom court (`user-service`, `mysql-user`), donc chacun parle automatiquement aux services de **son** namespace.
+
+> **Remarque :** l'adresse IP est écrite avec des tirets (`127-0-0-1`). Avec des points, nip.io lit `pr-12.127.0.0.1` comme l'IP `12.127.0.0`.
+
+### État de l'intégration
+
+| Étape | Statut |
+|---|---|
+| Manifests Kustomize, namespaces dynamiques, routage Traefik | ✅ Testé à la main : deux environnements (`pr-1`, `pr-2`) en parallèle, indépendants (un compte créé dans l'un n'existe pas dans l'autre), et la suppression d'un namespace efface ses données sans toucher l'autre |
+| Construction des images par GitHub Actions et publication sur GHCR | ⏳ Prévu |
+| Création et suppression automatiques d'un environnement par PR (ArgoCD ApplicationSet) | ⏳ Prévu |
+
+**L'automatisation n'est pas encore en place** : aujourd'hui, un environnement se déploie à la main, comme ci-dessous. Dans PRVue, c'est ArgoCD qui gérera tout le cycle de vie (création à l'ouverture de la PR, mise à jour à chaque commit, suppression à la fermeture).
+
+### Déployer à la main dans un namespace local
+
+**Prérequis** : le socle de PRVue (cluster kind `previews`, Traefik), créé avec `terraform apply` dans `platform/terraform` du dépôt [PRVue](https://github.com/sana-Benz/PRVue).
+
+```bash
+# 1. Construire les images et les charger dans le cluster kind (pas besoin de Docker Hub)
+docker build -t sanabns/user-service:latest ./user-service
+docker build -t sanabns/order-service:latest ./order-service
+docker build -t sanabns/frontend:latest ./frontend
+kind load docker-image --name previews sanabns/user-service:latest sanabns/order-service:latest sanabns/frontend:latest
+
+# 2. (facultatif) Voir le YAML final sans rien appliquer
+kubectl kustomize .
+
+# 3. Déployer dans le namespace "micropizzeria"
+kubectl apply -k .
+kubectl wait -n micropizzeria --for=condition=available deploy --all --timeout=300s
+
+# 4. Ouvrir l'application
+#    http://micropizzeria.127-0-0-1.nip.io
+#    (juste après le déploiement, Traefik peut répondre 503 pendant quelques secondes)
+
+# 5. Tout supprimer (pods, services, bases et volumes)
+kubectl delete namespace micropizzeria
+```
+
+Pour tester un autre namespace, changer localement la ligne `namespace:` de `kustomization.yaml` (sans la commiter) : l'adresse devient `http://<namespace>.127-0-0-1.nip.io`.
+
+Les secrets de ce déploiement sont des valeurs jetables (`preview-only-not-a-secret`), définies dans `kustomization.yaml`. Elles ne protègent rien de réel : chaque environnement a ses propres bases de test, supprimées avec lui. Les vrais `secret.yaml` restent hors de Git.
 
 ---
 
 ## Prérequis
+
+> **Version `v1-minikube`.** Cette section et la suivante décrivent le déploiement autonome d'origine (Minikube + Nginx Ingress + `deploy.sh`). Utilisez-les avec le tag `v1-minikube` : dans la version actuelle, `ingress.yaml` est prévu pour Traefik. Pour la version actuelle, voir [Déployer à la main dans un namespace local](#déployer-à-la-main-dans-un-namespace-local).
 
 Les outils suivants doivent être installés et configurés avant de lancer le projet :
 
@@ -251,13 +344,15 @@ OrderItem: id | order_id (FK) | menu_item_id (FK) | quantity | unit_price
 
 ## Configuration Kubernetes
 
-Toutes les ressources se trouvent dans le namespace `default`. Le projet utilise les primitives K8s suivantes :
+Dans la version `v1-minikube`, toutes les ressources se trouvent dans le namespace `default`. Dans la version actuelle, Kustomize place toutes les ressources dans le namespace de l'environnement (voir [Namespaces dynamiques](#namespaces-dynamiques)). Le projet utilise les primitives K8s suivantes :
 
 ### Deployments
 
 Chaque service (user-service, order-service, frontend, mysql-user, mysql-order) tourne en tant que **Deployment** avec 1 réplica. Les Deployments ont été choisis plutôt que des Pods nus car ils offrent un redémarrage automatique en cas de crash, des mises à jour progressives sans interruption, et un sélecteur stable pour que les Services puissent les cibler.
 
 Tous les déploiements applicatifs utilisent `imagePullPolicy: Always` pour s'assurer que la dernière image poussée est récupérée à chaque redémarrage — important lors de l'utilisation d'un tag `latest` en développement actif.
+
+Avec Kustomize (version actuelle), un patch remplace cette valeur par `IfNotPresent` : les images de preview auront un tag unique par commit, dont le contenu ne change jamais, donc inutile de les retélécharger. Cela permet aussi d'utiliser des images chargées localement avec `kind load docker-image`.
 
 ### Init Containers
 
@@ -301,6 +396,8 @@ env:
 
 La rotation d'un identifiant nécessite uniquement de mettre à jour le Secret et de redémarrer le pod concerné — aucune reconstruction d'image n'est nécessaire.
 
+Pour les environnements de preview, `kustomization.yaml` génère ces deux Secrets (`secretGenerator`) avec les mêmes noms et les mêmes clés, mais des valeurs jetables. ArgoCD ne déploie que ce qui est dans Git, et ces bases de test n'ont rien à protéger.
+
 ### Sondes de santé
 
 Les deux services Flask exposent un endpoint `/health` retournant `{"status": "ok"}`. Kubernetes l'utilise pour :
@@ -320,6 +417,8 @@ Tous les pods déclarent des `requests` et `limits` de CPU et mémoire pour évi
 ---
 
 ## Ingress & Routage
+
+> **Version `v1-minikube` : Nginx.** La version actuelle utilise Traefik, voir [Évolution : Traefik pour PRVue](#évolution--traefik-pour-prvue) à la fin de cette section.
 
 Un seul **Nginx Ingress Controller** constitue l'unique point d'entrée dans le cluster. Tout le trafic HTTP arrive à l'IP Minikube sur le port 80 et est routé vers le service backend approprié en fonction du préfixe du chemin URL.
 
@@ -356,6 +455,20 @@ Le **routage par chemin** a été choisi car l'application tourne sous une seule
 ### TLS
 
 TLS n'est pas configuré dans la configuration actuelle (HTTP uniquement). Dans un environnement de production, un `ClusterIssuer` cert-manager adossé à Let's Encrypt serait ajouté et l'Ingress serait annoté pour gérer la terminaison HTTPS au niveau du contrôleur.
+
+### Évolution : Traefik pour PRVue
+
+Le projet Ingress-Nginx a été arrêté par Kubernetes (plus de mises à jour depuis mars 2026). La version actuelle utilise **Traefik**, installé par PRVue. Le routage reste identique pour l'application :
+
+| Chemin entrant | Règle Traefik | Le service reçoit | Transmis à |
+|----------------|---------------|-------------------|-----------|
+| `/api/users/*`, `/api/auth/*` | `Prefix` + middleware `strip-api` | `/users/*`, `/auth/*` | `user-service:5001` |
+| `/api/orders/*`, `/api/menu/*` | `Prefix` + middleware `strip-api` | `/orders/*`, `/menu/*` | `order-service:5002` |
+| `/*` (catch-all) | `Prefix /` | `/*` | `frontend:80` |
+
+- Le middleware `strip-api` (`traefik-middleware.yaml`) retire `/api`, comme le faisait `rewrite-target`.
+- Chaque environnement a son propre **host** (`pr-12.127-0-0-1.nip.io`) : Traefik reçoit tout sur le port 80 et choisit l'environnement d'après le nom demandé (routage par hôte, en plus du routage par chemin).
+- Les previews sont en HTTP simple et n'écoutent que sur `127.0.0.1` (le laptop). Le TLS auto-signé de `v1-minikube` n'est pas repris pour l'instant.
 
 ---
 
@@ -410,7 +523,7 @@ Les deux services Flask étant sans état (tout l'état persistant est dans MySQ
 La sécurité a été intégrée à plusieurs niveaux du projet, aussi bien au niveau réseau et infrastructure qu'applicatif. L'objectif est de limiter la surface d'attaque, d'isoler les composants entre eux et de protéger les données sensibles tout au long du cycle de vie de l'application.
 
 - **Exposition réseau minimale** — tous les services backend (user-service, order-service, bases de données) sont exposés en `ClusterIP` uniquement : ils ne sont pas accessibles depuis l'extérieur du cluster. Seul l'Ingress Controller constitue le point d'entrée public.
-- **TLS sur l'Ingress** — le trafic entrant est chiffré via un certificat TLS auto-signé configuré sur l'Ingress Nginx, avec redirection automatique HTTP → HTTPS.
+- **TLS sur l'Ingress** (`v1-minikube`) — le trafic entrant est chiffré via un certificat TLS auto-signé configuré sur l'Ingress Nginx, avec redirection automatique HTTP → HTTPS. Les previews PRVue sont en HTTP, accessibles uniquement depuis le laptop (`127.0.0.1`).
 - **Secrets Kubernetes** — les credentials sensibles (mots de passe MySQL, clé de signature JWT) sont stockés dans des objets `Secret` Kubernetes et injectés comme variables d'environnement dans les pods. Ces fichiers ne sont pas commités dans le dépôt Git.
 - **Authentification JWT** — les tokens d'accès sont des JWT signés en HS256 avec une durée de validité d'1 heure. Les mots de passe utilisateurs sont hachés avec **bcrypt** (salage automatique, résistant aux attaques par force brute).
 - **RBAC Kubernetes** — chaque service applicatif dispose de son propre `ServiceAccount`, associé à un `Role` et un `RoleBinding` qui ne lui accordent que les permissions strictement nécessaires (principe du moindre privilège). Aucun service n'a accès aux ressources Kubernetes d'un autre.
@@ -422,7 +535,7 @@ La sécurité a été intégrée à plusieurs niveaux du projet, aussi bien au n
 
 ## Flux complet d'une requête
 
-La trace suivante suit un utilisateur passant une commande, du navigateur jusqu'à la base de données et en retour.
+La trace suivante suit un utilisateur passant une commande, du navigateur jusqu'à la base de données et en retour. Elle décrit la version `v1-minikube` ; avec Traefik, le chemin est le même, seul le contrôleur à l'entrée change.
 
 ```
 Navigateur
