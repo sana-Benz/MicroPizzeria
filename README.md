@@ -39,7 +39,7 @@ MicroPizzeria est l'**application de démonstration** de [PRVue](https://github.
 | Namespace | `default` | Un namespace par environnement (`pr-12`, `pr-13`…) |
 | Contrôleur Ingress | Nginx (regex + `rewrite-target`) | Traefik (chemins `Prefix` + middleware `stripPrefix`) |
 | Adresse | IP de Minikube | Un nom par environnement : `http://pr-12.127-0-0-1.nip.io` |
-| Images | `sanabns/*:latest` (Docker Hub) | Prévu : `ghcr.io/sana-benz/micropizzeria-<service>:pr-<numéro>-<sha>` |
+| Images | `sanabns/*:latest` (Docker Hub) | `ghcr.io/sana-benz/micropizzeria-<service>:pr-<numéro>-<sha8>`, construites par GitHub Actions pour chaque commit de PR |
 | Secrets | `secret.yaml` créés à la main | Valeurs jetables générées par Kustomize pour les previews |
 
 Pour retrouver la version d'origine :
@@ -55,6 +55,7 @@ git switch --detach v1-minikube
 | `namespace.yaml` | **Nouveau.** Le namespace fait partie de l'application, il est donc supprimé avec elle |
 | `traefik-middleware.yaml` | **Nouveau.** Retire `/api` avant de transmettre aux services Flask (remplace le `rewrite-target` de Nginx) |
 | `ingress.yaml` | **Modifié.** Nginx → Traefik, et un `host` par environnement |
+| `.github/workflows/preview.yml` | **Nouveau.** Construit les 3 images de chaque PR, les publie sur GHCR, puis ajoute le label `preview-ready` |
 | `*/k8s/*.yaml`, `rbac.yaml` | **Inchangés** |
 
 ### Namespaces dynamiques
@@ -73,10 +74,22 @@ Chaque environnement a ses propres pods, ses propres bases MySQL et ses propres 
 | Étape | Statut |
 |---|---|
 | Manifests Kustomize, namespaces dynamiques, routage Traefik | ✅ Testé à la main : deux environnements (`pr-1`, `pr-2`) en parallèle, indépendants (un compte créé dans l'un n'existe pas dans l'autre), et la suppression d'un namespace efface ses données sans toucher l'autre |
-| Construction des images par GitHub Actions et publication sur GHCR | ⏳ Prévu |
+| Construction des images par GitHub Actions et publication sur GHCR | 🟡 Workflow écrit (`.github/workflows/preview.yml`), pas encore exécuté |
 | Création et suppression automatiques d'un environnement par PR (ArgoCD ApplicationSet) | ⏳ Prévu |
 
-**L'automatisation n'est pas encore en place** : aujourd'hui, un environnement se déploie à la main, comme ci-dessous. Dans PRVue, c'est ArgoCD qui gérera tout le cycle de vie (création à l'ouverture de la PR, mise à jour à chaque commit, suppression à la fermeture).
+**L'automatisation n'est pas encore en place** : aujourd'hui, un environnement se déploie à la main, comme ci-dessous. Dans PRVue, c'est ArgoCD qui gérera tout le cycle de vie (création quand les images de la PR sont prêtes, mise à jour à chaque commit, suppression à la fermeture).
+
+### Images et cycle de vie d'une PR (prévu)
+
+| Événement | Ce qui se passe |
+|---|---|
+| PR ouverte (`opened`) | GitHub Actions construit les **3 images de l'application** (`frontend`, `user-service`, `order-service`) à partir du dernier commit de la PR. MySQL garde l'image officielle `mysql:8.0`, jamais reconstruite |
+| Les 3 builds réussissent | Images publiées sur GHCR avec deux tags : `pr-<numéro>-<8 premiers caractères du SHA>` (immuable, utilisé par les déploiements) et `pr-<numéro>` (mobile, pour les humains). La CI ajoute le label `preview-ready` à la PR |
+| PRVue voit `preview-ready` | ArgoCD crée l'environnement dans le namespace `pr-<numéro>` |
+| Nouveau commit (`synchronize`) | Nouvelles images, nouveau tag, nouveau déploiement dans **le même** namespace |
+| PR fermée ou fusionnée | ArgoCD supprime l'environnement et son namespace. Les images restent sur GHCR pour l'instant |
+
+**Limites connues** : après un nouveau commit, ArgoCD peut voir le commit avant que ses images soient publiées. L'ancienne version continue alors de répondre (mise à jour progressive), et le nouveau pod affiche `ImagePullBackOff` quelques minutes. Si le build d'un commit suivant échoue, l'ancienne version reste en ligne et l'application apparaît *Degraded* dans ArgoCD. Les PR venues d'un fork n'ont pas de preview (jeton GitHub en lecture seule).
 
 ### Déployer à la main dans un namespace local
 
