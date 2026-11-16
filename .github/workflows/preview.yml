@@ -1,0 +1,84 @@
+# Builds the 3 application images of a pull request and publishes them to GHCR,
+# then marks the PR "preview-ready" so that PRVue (ArgoCD) deploys it.
+# Tag contract shared with the PRVue ApplicationSet: pr-<number>-<first 8 chars of the PR head SHA>
+name: Preview images
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+# nothing more than reading the code by default; each job asks for what it needs
+permissions:
+  contents: read
+
+# a new push on the same PR cancels the build of the previous commit (ArgoCD only follows the latest one)
+concurrency:
+  group: preview-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+env:
+  PR_NUMBER: ${{ github.event.pull_request.number }}
+  HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write   # push to ghcr.io
+    strategy:
+      matrix:
+        service: [frontend, user-service, order-service]
+    steps:
+      # the PR head commit, not the merge commit that pull_request checks out by default:
+      # it is the commit ArgoCD deploys (head_sha)
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Compute the image tag
+        id: tag
+        run: echo "sha_tag=pr-${PR_NUMBER}-${HEAD_SHA::8}" >> "$GITHUB_OUTPUT"   # 8 chars = ArgoCD head_short_sha
+
+      - uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - id: meta
+        uses: docker/metadata-action@v6
+        env:
+          DOCKER_METADATA_PR_HEAD_SHA: true   # org.opencontainers.image.revision = PR head SHA
+        with:
+          images: ghcr.io/sana-benz/micropizzeria-${{ matrix.service }}
+          # exactly these two tags: no "latest", no default tags (they only apply when "tags" is empty)
+          flavor: |
+            latest=false
+          # immutable tag (used by the deployments) + moving tag (latest build of the PR, for humans)
+          tags: |
+            type=raw,value=${{ steps.tag.outputs.sha_tag }}
+            type=raw,value=pr-${{ env.PR_NUMBER }}
+          # links the GHCR package to this repository
+          labels: |
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+
+      - uses: docker/build-push-action@v7
+        with:
+          context: ./${{ matrix.service }}   # existing Dockerfile of the service
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+
+  # runs only if the 3 builds succeeded; adding a label that is already there changes nothing
+  label:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    steps:
+      - name: Mark the PR as ready for a preview
+        env:
+          GH_TOKEN: ${{ github.token }}   # gh reads its token from GH_TOKEN
+        # PR_NUMBER (workflow env) = github.event.pull_request.number, GITHUB_REPOSITORY = github.repository
+        run: gh pr edit "$PR_NUMBER" --repo "$GITHUB_REPOSITORY" --add-label preview-ready
