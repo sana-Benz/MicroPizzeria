@@ -2,22 +2,29 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: micropizza-gateway
-  namespace: default
   annotations:
-    nginx.ingress.kubernetes.io/rewrite-target: /$2
-    nginx.ingress.kubernetes.io/use-regex: "true"
-    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    # strip-api middleware (traefik-middleware.yaml), referenced as <namespace>-<name>@kubernetescrd
+    # NAMESPACE is replaced by kustomization.yaml (e.g. pr-12)
+    traefik.ingress.kubernetes.io/router.middlewares: NAMESPACE-strip-api@kubernetescrd
 spec:
-  ingressClassName: nginx
-  tls:
-    - secretName: tls-secret
+  ingressClassName: traefik
   rules:
-    - http:
+    # one host per environment: NAMESPACE.127-0-0-1.nip.io → pr-12.127-0-0-1.nip.io
+    # (dashes: nip.io would read "pr-12.127.0.0.1" as the IP 12.127.0.0)
+    - host: NAMESPACE.127-0-0-1.nip.io
+      http:
         paths:
           # /api/users/me  → user-service sees /users/me
           # /api/auth/login → user-service sees /auth/login
-          - path: /api(/)((?:users|auth).*)
-            pathType: ImplementationSpecific
+          - path: /api/users
+            pathType: Prefix
+            backend:
+              service:
+                name: user-service
+                port:
+                  number: 5001
+          - path: /api/auth
+            pathType: Prefix
             backend:
               service:
                 name: user-service
@@ -26,16 +33,23 @@ spec:
 
           # /api/orders/123 → order-service sees /orders/123
           # /api/menu       → order-service sees /menu
-          - path: /api(/)((?:orders|menu).*)
-            pathType: ImplementationSpecific
+          - path: /api/orders
+            pathType: Prefix
+            backend:
+              service:
+                name: order-service
+                port:
+                  number: 5002
+          - path: /api/menu
+            pathType: Prefix
             backend:
               service:
                 name: order-service
                 port:
                   number: 5002
 
-          - path: /()(.*)
-            pathType: ImplementationSpecific
+          - path: /
+            pathType: Prefix
             backend:
               service:
                 name: frontend

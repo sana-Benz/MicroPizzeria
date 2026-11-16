@@ -1,0 +1,10 @@
+# Removes /api before forwarding to the Flask services (replaces nginx rewrite-target)
+# /api/users/me → user-service sees /users/me
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: strip-api
+spec:
+  stripPrefix:
+    prefixes:
+      - /api
