@@ -74,7 +74,7 @@ Chaque environnement a ses propres pods, ses propres bases MySQL et ses propres 
 | Étape | Statut |
 |---|---|
 | Manifests Kustomize, namespaces dynamiques, routage Traefik | ✅ Testé à la main : deux environnements (`pr-1`, `pr-2`) en parallèle, indépendants (un compte créé dans l'un n'existe pas dans l'autre), et la suppression d'un namespace efface ses données sans toucher l'autre |
-| Construction des images par GitHub Actions et publication sur GHCR | 🟡 Workflow écrit (`.github/workflows/preview.yml`), pas encore exécuté |
+| Construction des images par GitHub Actions et publication sur GHCR | ✅ Workflow écrit (`.github/workflows/preview.yml`)|
 | Création et suppression automatiques d'un environnement par PR (ArgoCD ApplicationSet) | ⏳ Prévu |
 
 **L'automatisation n'est pas encore en place** : aujourd'hui, un environnement se déploie à la main, comme ci-dessous. Dans PRVue, c'est ArgoCD qui gérera tout le cycle de vie (création quand les images de la PR sont prêtes, mise à jour à chaque commit, suppression à la fermeture).
