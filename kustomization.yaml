@@ -1,0 +1,66 @@
+# Deploys the whole application into one namespace: kubectl apply -k .
+# PRVue (ArgoCD) replaces "namespace" (pr-12) and the image tags for each pull request
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# every resource goes into this namespace (overrides "namespace: default" in the files)
+namespace: micropizzeria
+
+resources:
+  - namespace.yaml
+  - rbac.yaml
+  - user-service/k8s/mysql.yaml
+  - user-service/k8s/deployment.yaml
+  - user-service/k8s/service.yaml
+  - order-service/k8s/mysql.yaml
+  - order-service/k8s/deployment.yaml
+  - order-service/k8s/service.yaml
+  - frontend/k8s/deployment.yaml
+  - frontend/k8s/service.yaml
+  - traefik-middleware.yaml
+  - ingress.yaml
+
+# Preview-only values, NOT real secrets: each preview has its own throwaway databases,
+# deleted with the pull request. The real secret.yaml files stay out of Git
+secretGenerator:
+  - name: user-service-secret
+    literals:
+      - secret-key=preview-only-not-a-secret
+      - mysql-password=preview-only-not-a-secret
+      - mysql-root-password=preview-only-not-a-secret
+  - name: order-service-secret
+    literals:
+      - mysql-password=preview-only-not-a-secret
+      - mysql-root-password=preview-only-not-a-secret
+generatorOptions:
+  disableNameSuffixHash: true   # keep the exact names used in the deployments and rbac.yaml
+
+patches:
+  # preview images have a unique tag per commit (pr-12-abcd1234): no need to download them again
+  - target:
+      kind: Deployment
+    patch: |-
+      - op: add
+        path: /spec/template/spec/containers/0/imagePullPolicy
+        value: IfNotPresent
+
+# copies the namespace name into the Ingress host and the middleware reference
+replacements:
+  - source:
+      kind: Namespace
+      fieldPath: metadata.name
+    targets:
+      - select:
+          kind: Ingress
+        fieldPaths:
+          - spec.rules.0.host
+        options:
+          delimiter: "."
+          index: 0
+      - select:
+          kind: Ingress
+        fieldPaths:
+          - metadata.annotations.traefik\.ingress\.kubernetes\.io/router\.middlewares
+        options:
+          delimiter: "-"
+          index: 0

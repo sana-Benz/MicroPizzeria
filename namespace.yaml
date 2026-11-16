@@ -1,0 +1,6 @@
+# Namespace of the environment. The name is replaced by the "namespace:" field
+# of kustomization.yaml (e.g. pr-12), so it is deleted along with the preview
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: micropizzeria
