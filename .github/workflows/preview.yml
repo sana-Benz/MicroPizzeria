@@ -1,17 +1,21 @@
-# Builds the 3 application images of a pull request and publishes them to GHCR,
+# Builds the 3 application images of a pull request, publishes them to GHCR and scans them,
 # then marks the PR "preview-ready" so that PRVue (ArgoCD) deploys it.
 # Tag contract shared with the PRVue ApplicationSet: pr-<number>-<first 8 chars of the PR head SHA>
+# A PR with a leaked secret (Gitleaks) or a fixable CRITICAL vulnerability (Trivy) never gets the label.
+#
+# Supply chain: every action is pinned by full commit SHA (tags can be moved, see the Trivy
+# compromise CVE-2026-33634), the Gitleaks image by digest, and the Trivy binary by version.
+# Dependabot (.github/dependabot.yml) proposes updates for the action SHAs.
 name: Preview images
 
 on:
-  pull_request:
+  pull_request:   # never pull_request_target: it runs with write access on code from the PR
     types: [opened, synchronize, reopened]
 
-# nothing more than reading the code by default; each job asks for what it needs
-permissions:
-  contents: read
+# no permission by default; each job asks for exactly what it needs
+permissions: {}
 
-# a new push on the same PR cancels the build of the previous commit (ArgoCD only follows the latest one)
+# a new push on the same PR cancels the run of the previous commit (ArgoCD only follows the latest one)
 concurrency:
   group: preview-${{ github.event.pull_request.number }}
   cancel-in-progress: true
@@ -19,8 +23,68 @@ concurrency:
 env:
   PR_NUMBER: ${{ github.event.pull_request.number }}
   HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+  BASE_SHA: ${{ github.event.pull_request.base.sha }}
+  TRIVY_VERSION: v0.76.1   # >= 0.72.0 (GHSA-mcj4-mphf-j9ff, GHSA-q3fv-x8vg-qqm4, GHSA-8rc5-4fr6-64pw); never "latest"
 
 jobs:
+  # secrets in the commits of the PR (BASE..HEAD), in parallel with the builds
+  gitleaks:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0              # full history: the PR's commits must be available
+          persist-credentials: false
+
+      - name: Scan the PR's commits for secrets
+        # official image v8.30.1, pinned by digest (immutable); exit code 1 if a secret is found
+        run: >
+          docker run --rm -v "$GITHUB_WORKSPACE:/repo"
+          ghcr.io/gitleaks/gitleaks:v8.30.1@sha256:c00b6bd0aeb3071cbcb79009cb16a60dd9e0a7c60e2be9ab65d25e6bc8abbb7f
+          git /repo --log-opts="${BASE_SHA}..${HEAD_SHA}" --redact --verbose --no-banner
+
+  # misconfigurations in what gets deployed (rendered Kustomize output) and in the 3 Dockerfiles.
+  # REPORT ONLY for now: exit code 0 and not in the "needs" of the label job, so it never blocks a preview
+  iac:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write   # upload SARIF to code scanning (Security tab)
+    steps:
+      # default checkout (merge commit = github.sha): the commit code scanning expects for a PR
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # scan what ArgoCD really applies (namespace, patches, generated Secrets), not the raw files
+      - name: Render the Kustomize manifests
+        run: |
+          mkdir -p rendered
+          kubectl kustomize . > rendered/micropizzeria.yaml
+
+      - name: Trivy config scan (SARIF, report only)
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          version: ${{ env.TRIVY_VERSION }}   # the action's default (v0.70.0) is vulnerable
+          scan-type: config
+          scan-ref: .
+          # the raw manifests are already in rendered/micropizzeria.yaml: don't scan them twice
+          skip-dirs: "**/k8s"
+          skip-files: "*.yaml"     # root-level files only (kustomization, namespace, rbac, ingress...)
+          format: sarif
+          output: trivy-config.sarif
+          exit-code: "0"
+
+      - name: Upload to the Security tab
+        if: always()
+        uses: github/codeql-action/upload-sarif@9b3254085494b55a0f7c4c2b3d2d52cc712ce370 # v4.39.1
+        with:
+          sarif_file: trivy-config.sarif
+          category: trivy-config
+
   build:
     runs-on: ubuntu-latest
     permissions:
@@ -32,22 +96,23 @@ jobs:
     steps:
       # the PR head commit, not the merge commit that pull_request checks out by default:
       # it is the commit ArgoCD deploys (head_sha)
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
 
       - name: Compute the image tag
         id: tag
         run: echo "sha_tag=pr-${PR_NUMBER}-${HEAD_SHA::8}" >> "$GITHUB_OUTPUT"   # 8 chars = ArgoCD head_short_sha
 
-      - uses: docker/login-action@v4
+      - uses: docker/login-action@81c6f93d4bc991e510b342a00b419b3bb4efc5c6 # v4.7.0
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - id: meta
-        uses: docker/metadata-action@v6
+        uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6.2.0
         env:
           DOCKER_METADATA_PR_HEAD_SHA: true   # org.opencontainers.image.revision = PR head SHA
         with:
@@ -63,16 +128,73 @@ jobs:
           labels: |
             org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
 
-      - uses: docker/build-push-action@v7
+      - uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
         with:
           context: ./${{ matrix.service }}   # existing Dockerfile of the service
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
 
-  # runs only if the 3 builds succeeded; adding a label that is already there changes nothing
-  label:
+  # vulnerabilities in each pushed image: HIGH and CRITICAL reported, fixable CRITICAL blocks the preview
+  scan:
     needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write   # upload SARIF to code scanning (Security tab)
+    strategy:
+      fail-fast: false         # always scan the 3 images, even if one fails the gate
+      matrix:
+        service: [frontend, user-service, order-service]
+    steps:
+      # default checkout (merge commit = github.sha): the commit code scanning expects for a PR
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Compute the image reference
+        id: image
+        env:
+          SERVICE: ${{ matrix.service }}
+        run: echo "ref=ghcr.io/sana-benz/micropizzeria-${SERVICE}:pr-${PR_NUMBER}-${HEAD_SHA::8}" >> "$GITHUB_OUTPUT"
+
+      # 1. report: HIGH + CRITICAL (fixed or not), never fails, uploaded to the Security tab
+      - name: Trivy report (SARIF)
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          version: ${{ env.TRIVY_VERSION }}   # the action's default (v0.70.0) is vulnerable
+          image-ref: ${{ steps.image.outputs.ref }}
+          severity: HIGH,CRITICAL
+          format: sarif
+          output: trivy-${{ matrix.service }}.sarif
+          exit-code: "0"
+
+      - name: Upload to the Security tab
+        if: always()
+        uses: github/codeql-action/upload-sarif@9b3254085494b55a0f7c4c2b3d2d52cc712ce370 # v4.39.1
+        with:
+          sarif_file: trivy-${{ matrix.service }}.sarif
+          category: trivy-${{ matrix.service }}
+
+      # the gate below skips setup and runs this same binary from PATH: proves it is TRIVY_VERSION
+      - name: Trivy version used by the gate
+        run: trivy --version
+
+      # 2. gate: only CRITICAL vulnerabilities that already have a fix fail the job
+      - name: Trivy gate (CRITICAL with a fix available)
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          skip-setup-trivy: true              # reuse the binary installed by the report step
+          image-ref: ${{ steps.image.outputs.ref }}
+          severity: CRITICAL
+          ignore-unfixed: true
+          format: table
+          exit-code: "1"
+
+  # only if Gitleaks, the 3 builds and the 3 scans passed (not "iac": report only for now);
+  # adding a label that is already there changes nothing
+  label:
+    needs: [gitleaks, build, scan]
     runs-on: ubuntu-latest
     permissions:
       pull-requests: write
