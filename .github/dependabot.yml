@@ -7,3 +7,7 @@ updates:
     directory: /
     schedule:
       interval: weekly
+    # only propose versions released at least 14 days ago (same rule as the manual pins);
+    # version updates only: security updates are never delayed
+    cooldown:
+      default-days: 14
