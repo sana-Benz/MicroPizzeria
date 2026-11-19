@@ -167,6 +167,7 @@ jobs:
           severity: HIGH,CRITICAL
           format: sarif
           output: trivy-${{ matrix.service }}.sarif
+          limit-severities-for-sarif: true    # otherwise the action ignores "severity" for SARIF
           exit-code: "0"
 
       - name: Upload to the Security tab
