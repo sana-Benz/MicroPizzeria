@@ -27,7 +27,7 @@ env:
   TRIVY_VERSION: v0.76.1   # >= 0.72.0 (GHSA-mcj4-mphf-j9ff, GHSA-q3fv-x8vg-qqm4, GHSA-8rc5-4fr6-64pw); never "latest"
 
 jobs:
-  # secrets in the commits of the PR (BASE..HEAD), in parallel with the builds
+  # secrets in the commits of the PR (BASE..HEAD); the builds wait for it, so a leaked secret is never pushed in an image
   gitleaks:
     runs-on: ubuntu-latest
     permissions:
@@ -86,6 +86,7 @@ jobs:
           category: trivy-config
 
   build:
+    needs: gitleaks   # no image is built or pushed to GHCR if Gitleaks finds a secret (P10)
     runs-on: ubuntu-latest
     permissions:
       contents: read
