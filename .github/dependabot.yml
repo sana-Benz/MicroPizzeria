@@ -1,0 +1,9 @@
+# Keeps the pinned action SHAs up to date: weekly PRs that bump the SHA and its "# vX.Y.Z" comment.
+# Not covered by Dependabot: the Trivy binary version (TRIVY_VERSION) and the Gitleaks image digest
+# in preview.yml; check them by hand against the release pages.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
